@@ -1,0 +1,35 @@
+---
+interface Props {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+}
+
+const { title, value, subtitle, icon = '📊', trend } = Astro.props;
+---
+
+<div class="card p-6">
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <p class="text-sm font-medium text-gray-600">{title}</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+      {subtitle && (
+        <p class="mt-1 text-sm text-gray-500">{subtitle}</p>
+      )}
+      {trend && (
+        <div class={`mt-2 flex items-center text-sm ${trend.isPositive ? 'text-green-600' : 'text-red-600'}`}>
+          <span>{trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%</span>
+          <span class="ml-2 text-gray-500">vs last month</span>
+        </div>
+      )}
+    </div>
+    <div class="text-4xl opacity-80">
+      {icon}
+    </div>
+  </div>
+</div>

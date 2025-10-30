@@ -1,0 +1,192 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadAutomations } from '../utils/data';
+
+const automations = loadAutomations();
+
+// Collect all API keys with expirations
+const apiKeysWithExpiration: Array<{
+  key: string;
+  system: string;
+  expiration: Date;
+  automationId: string;
+  automationName: string;
+  notes?: string;
+}> = [];
+
+automations.forEach(automation => {
+  if (!automation.api_keys) return;
+
+  automation.api_keys.forEach(key => {
+    if (key.expiration) {
+      apiKeysWithExpiration.push({
+        key: key.name,
+        system: key.system,
+        expiration: new Date(key.expiration),
+        automationId: automation.id,
+        automationName: automation.name,
+        notes: key.notes,
+      });
+    }
+  });
+});
+
+// Sort by expiration date
+apiKeysWithExpiration.sort((a, b) => a.expiration.getTime() - b.expiration.getTime());
+
+// Group by month
+const keysByMonth = new Map<string, typeof apiKeysWithExpiration>();
+
+apiKeysWithExpiration.forEach(item => {
+  const monthKey = item.expiration.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+  if (!keysByMonth.has(monthKey)) {
+    keysByMonth.set(monthKey, []);
+  }
+  keysByMonth.get(monthKey)!.push(item);
+});
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const getDaysUntilExpiration = (date: Date) => {
+  return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+};
+---
+
+<BaseLayout title="Expiration Calendar - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-900">Expiration Calendar</h1>
+      <p class="mt-2 text-gray-600">
+        Track API keys and credentials expiration dates
+      </p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total Keys Tracked</p>
+            <p class="mt-2 text-3xl font-bold text-gray-900">{apiKeysWithExpiration.length}</p>
+          </div>
+          <div class="text-4xl opacity-80">🔑</div>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Expiring in 30 Days</p>
+            <p class="mt-2 text-3xl font-bold text-red-600">
+              {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 30 && getDaysUntilExpiration(k.expiration) > 0).length}
+            </p>
+          </div>
+          <div class="text-4xl opacity-80">⚠️</div>
+        </div>
+      </div>
+
+      <div class="card p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Expiring in 90 Days</p>
+            <p class="mt-2 text-3xl font-bold text-yellow-600">
+              {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 90 && getDaysUntilExpiration(k.expiration) > 30).length}
+            </p>
+          </div>
+          <div class="text-4xl opacity-80">📅</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline by Month -->
+    <div class="space-y-6">
+      {Array.from(keysByMonth.entries()).map(([month, keys]) => {
+        const hasUrgent = keys.some(k => getDaysUntilExpiration(k.expiration) <= 30);
+
+        return (
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h2 class="text-2xl font-bold text-gray-900">{month}</h2>
+              {hasUrgent && (
+                <span class="badge bg-red-100 text-red-700">
+                  ⚠️ Urgent
+                </span>
+              )}
+            </div>
+
+            <div class="space-y-4">
+              {keys.map(item => {
+                const daysUntil = getDaysUntilExpiration(item.expiration);
+                let urgencyColor = 'border-green-500';
+                let urgencyBadge = 'bg-green-100 text-green-700';
+
+                if (daysUntil < 0) {
+                  urgencyColor = 'border-red-700';
+                  urgencyBadge = 'bg-red-200 text-red-900';
+                } else if (daysUntil <= 30) {
+                  urgencyColor = 'border-red-500';
+                  urgencyBadge = 'bg-red-100 text-red-700';
+                } else if (daysUntil <= 90) {
+                  urgencyColor = 'border-yellow-500';
+                  urgencyBadge = 'bg-yellow-100 text-yellow-700';
+                }
+
+                return (
+                  <div class={`border-l-4 ${urgencyColor} pl-4 py-3 bg-gray-50 rounded-r-lg`}>
+                    <div class="flex justify-between items-start">
+                      <div class="flex-1">
+                        <div class="flex items-center space-x-3 mb-2">
+                          <h3 class="font-bold text-gray-900">{item.key}</h3>
+                          <span class={`badge ${urgencyBadge} text-xs`}>
+                            {daysUntil < 0 ? 'EXPIRED' : `${daysUntil} days`}
+                          </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-1">
+                          <span class="font-medium">System:</span> {item.system}
+                        </p>
+                        <a
+                          href={`/automations/${item.automationId}`}
+                          class="text-sm text-primary-600 hover:underline"
+                        >
+                          {item.automationName} →
+                        </a>
+                        {item.notes && (
+                          <p class="text-xs text-gray-500 mt-2 italic">
+                            {item.notes}
+                          </p>
+                        )}
+                      </div>
+                      <div class="text-right">
+                        <p class="text-sm font-semibold text-gray-900">
+                          {formatDate(item.expiration)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {apiKeysWithExpiration.length === 0 && (
+      <div class="card p-12 text-center">
+        <p class="text-gray-500 text-lg">
+          No API keys or credentials with expiration dates found.
+        </p>
+        <p class="text-gray-400 text-sm mt-2">
+          Add expiration dates to your automation metadata to track them here.
+        </p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

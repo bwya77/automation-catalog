@@ -1,0 +1,189 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatsCard from '../components/StatsCard.astro';
+import AutomationCard from '../components/AutomationCard.astro';
+import TimeSeriesChart from '../components/TimeSeriesChart';
+import { loadAutomations, loadEngineers, getExpiringApiKeys } from '../utils/data';
+
+const automations = loadAutomations();
+const engineers = loadEngineers();
+
+// Calculate stats
+const totalTimeSaved = automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+const totalAnnualValue = automations.reduce((sum, a) => sum + a.annual_value_usd, 0);
+const expiringKeys = getExpiringApiKeys(90);
+
+// Generate mock time series data (in a real app, this would come from historical data)
+const timeSeriesData = [
+  { month: 'Jul', hours: 180 },
+  { month: 'Aug', hours: 220 },
+  { month: 'Sep', hours: 240 },
+  { month: 'Oct', hours: totalTimeSaved },
+  { month: 'Nov', hours: totalTimeSaved * 1.1 },
+  { month: 'Dec', hours: totalTimeSaved * 1.15 },
+];
+
+// Get recent automations
+const recentAutomations = [...automations]
+  .sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime())
+  .slice(0, 3);
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+---
+
+<BaseLayout title="Dashboard - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-900">Dashboard</h1>
+      <p class="mt-2 text-gray-600">
+        Overview of all DevOps automations and their impact
+      </p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <StatsCard
+        title="Total Automations"
+        value={automations.length}
+        icon="🤖"
+        subtitle={`Across ${new Set(automations.map(a => a.department)).size} departments`}
+      />
+
+      <StatsCard
+        title="Monthly Time Saved"
+        value={`${totalTimeSaved}h`}
+        icon="⏱️"
+        subtitle="Across all automations"
+      />
+
+      <StatsCard
+        title="Annual Value"
+        value={formatCurrency(totalAnnualValue)}
+        icon="💰"
+        subtitle="Total business value"
+      />
+
+      <StatsCard
+        title="Keys Expiring Soon"
+        value={expiringKeys.length}
+        icon="🔑"
+        subtitle="Within 90 days"
+      />
+    </div>
+
+    <!-- Time Series Chart -->
+    <div class="mb-8">
+      <TimeSeriesChart
+        client:load
+        data={timeSeriesData}
+        title="Time Saved Trend (Hours/Month)"
+      />
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Recent Automations -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-900">Recent Updates</h2>
+          <a href="/automations" class="text-primary-600 hover:text-primary-700 font-medium">
+            View All →
+          </a>
+        </div>
+        <div class="space-y-4">
+          {recentAutomations.map(automation => (
+            <AutomationCard automation={automation} />
+          ))}
+        </div>
+      </div>
+
+      <!-- Upcoming Expirations -->
+      <div>
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Upcoming Expirations</h2>
+        <div class="card p-6">
+          {expiringKeys.length === 0 ? (
+            <p class="text-gray-500 text-center py-8">
+              ✅ No API keys expiring in the next 90 days
+            </p>
+          ) : (
+            <div class="space-y-4">
+              {expiringKeys.slice(0, 5).map(key => {
+                const daysUntilExpiration = Math.ceil(
+                  (new Date(key.expiration!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                );
+                const isUrgent = daysUntilExpiration <= 30;
+
+                return (
+                  <div class="border-l-4 pl-4 py-2" class:list={[
+                    isUrgent ? 'border-red-500' : 'border-yellow-500'
+                  ]}>
+                    <div class="flex justify-between items-start">
+                      <div>
+                        <h3 class="font-semibold text-gray-900">{key.name}</h3>
+                        <p class="text-sm text-gray-600">{key.system}</p>
+                        <a
+                          href={`/automations/${key.automationId}`}
+                          class="text-xs text-primary-600 hover:underline"
+                        >
+                          {key.automationName}
+                        </a>
+                      </div>
+                      <div class="text-right">
+                        <span class={`badge ${isUrgent ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                          {daysUntilExpiration}d
+                        </span>
+                        <p class="text-xs text-gray-500 mt-1">
+                          {new Date(key.expiration!).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              {expiringKeys.length > 5 && (
+                <a href="/calendar" class="block text-center text-primary-600 hover:text-primary-700 font-medium pt-4 border-t">
+                  View All on Calendar →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        <!-- Department Breakdown -->
+        <div class="mt-8">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">By Department</h2>
+          <div class="card p-6">
+            <div class="space-y-3">
+              {Array.from(new Set(automations.map(a => a.department))).map(dept => {
+                const deptAutomations = automations.filter(a => a.department === dept);
+                const deptTimeSaved = deptAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+
+                return (
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <span class="font-medium text-gray-900 capitalize">{dept}</span>
+                      <span class="text-sm text-gray-500 ml-2">
+                        ({deptAutomations.length} automation{deptAutomations.length !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                    <div class="text-right">
+                      <span class="font-semibold text-gray-900">{deptTimeSaved}h/mo</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,214 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadAutomations } from '../utils/data';
+
+const automations = loadAutomations();
+
+// Get unique departments and tags for filters
+const departments = Array.from(new Set(automations.map(a => a.department))).sort();
+const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
+---
+
+<BaseLayout title="Automations - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold text-gray-900">All Automations</h1>
+      <p class="mt-2 text-gray-600">
+        Browse and filter {automations.length} automations across all departments
+      </p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Search -->
+        <div>
+          <label for="search" class="block text-sm font-medium text-gray-700 mb-1">
+            Search
+          </label>
+          <input
+            type="text"
+            id="search"
+            placeholder="Search automations..."
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+        </div>
+
+        <!-- Department Filter -->
+        <div>
+          <label for="department" class="block text-sm font-medium text-gray-700 mb-1">
+            Department
+          </label>
+          <select
+            id="department"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">All Departments</option>
+            {departments.map((dept) => (
+              <option value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Tag Filter -->
+        <div>
+          <label for="tag" class="block text-sm font-medium text-gray-700 mb-1">
+            Tag
+          </label>
+          <select
+            id="tag"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">All Tags</option>
+            {allTags.map((tag) => (
+              <option value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Clear Button -->
+        <div class="flex items-end">
+          <button
+            id="clearFilters"
+            class="w-full px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Count -->
+    <div class="mb-4">
+      <p class="text-gray-600">
+        Showing <span id="resultsCount" class="font-semibold">{automations.length}</span> automation(s)
+      </p>
+    </div>
+
+    <!-- Automations Grid -->
+    <div id="automationsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {automations.map((automation) => (
+        <div
+          class="automation-item"
+          data-name={automation.name.toLowerCase()}
+          data-description={automation.description.toLowerCase()}
+          data-department={automation.department}
+          data-tags={automation.tags.join(',')}
+          data-author={automation.author}
+        >
+          <a href={`/automations/${automation.id}`} class="card block p-6 hover:scale-[1.02] transition-transform h-full">
+            <div class="flex justify-between items-start mb-3">
+              <h3 class="text-xl font-bold text-gray-900">{automation.name}</h3>
+              <span class="badge bg-primary-100 text-primary-700 capitalize">
+                {automation.department}
+              </span>
+            </div>
+
+            <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+              {automation.description}
+            </p>
+
+            <div class="flex flex-wrap gap-2 mb-4">
+              {automation.tags.slice(0, 3).map(tag => (
+                <span class="badge bg-gray-100 text-gray-700">
+                  {tag}
+                </span>
+              ))}
+              {automation.tags.length > 3 && (
+                <span class="badge bg-gray-100 text-gray-500">
+                  +{automation.tags.length - 3} more
+                </span>
+              )}
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+              <div>
+                <p class="text-xs text-gray-500">Time Saved/Month</p>
+                <p class="text-lg font-semibold text-gray-900">
+                  {automation.time_saved_hours_per_month}h
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500">Annual Value</p>
+                <p class="text-lg font-semibold text-green-600">
+                  ${automation.annual_value_usd.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </a>
+        </div>
+      ))}
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="hidden text-center py-12">
+      <p class="text-gray-500 text-lg">No automations found matching your filters.</p>
+      <button
+        onclick="document.getElementById('clearFilters').click()"
+        class="mt-4 text-primary-600 hover:text-primary-700 font-medium"
+      >
+        Clear filters and try again
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Client-side filtering
+    const searchInput = document.getElementById('search') as HTMLInputElement;
+    const departmentSelect = document.getElementById('department') as HTMLSelectElement;
+    const tagSelect = document.getElementById('tag') as HTMLSelectElement;
+    const clearButton = document.getElementById('clearFilters') as HTMLButtonElement;
+    const automationItems = document.querySelectorAll('.automation-item');
+    const resultsCount = document.getElementById('resultsCount') as HTMLSpanElement;
+    const automationsGrid = document.getElementById('automationsGrid') as HTMLDivElement;
+    const noResults = document.getElementById('noResults') as HTMLDivElement;
+
+    function filterAutomations() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const selectedDept = departmentSelect.value;
+      const selectedTag = tagSelect.value;
+
+      let visibleCount = 0;
+
+      automationItems.forEach((item) => {
+        const name = item.getAttribute('data-name') || '';
+        const description = item.getAttribute('data-description') || '';
+        const department = item.getAttribute('data-department') || '';
+        const tags = item.getAttribute('data-tags') || '';
+
+        const matchesSearch = !searchTerm || name.includes(searchTerm) || description.includes(searchTerm);
+        const matchesDept = !selectedDept || department === selectedDept;
+        const matchesTag = !selectedTag || tags.split(',').includes(selectedTag);
+
+        if (matchesSearch && matchesDept && matchesTag) {
+          (item as HTMLElement).style.display = 'block';
+          visibleCount++;
+        } else {
+          (item as HTMLElement).style.display = 'none';
+        }
+      });
+
+      resultsCount.textContent = visibleCount.toString();
+
+      if (visibleCount === 0) {
+        automationsGrid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        automationsGrid.style.display = 'grid';
+        noResults.style.display = 'none';
+      }
+    }
+
+    searchInput.addEventListener('input', filterAutomations);
+    departmentSelect.addEventListener('change', filterAutomations);
+    tagSelect.addEventListener('change', filterAutomations);
+
+    clearButton.addEventListener('click', () => {
+      searchInput.value = '';
+      departmentSelect.value = '';
+      tagSelect.value = '';
+      filterAutomations();
+    });
+  </script>
+</BaseLayout>

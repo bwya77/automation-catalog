@@ -1,0 +1,31 @@
+name: M365 User Provisioning
+author: engineer-2
+department: hr
+description: Automated user provisioning in Microsoft 365 based on HR system changes, including license assignment and mailbox configuration
+tags:
+  - m365
+  - azure
+  - powershell
+  - power-automate
+systems:
+  - Microsoft 365
+  - Azure AD
+  - Power Automate
+  - SharePoint
+time_saved_hours_per_month: 80
+annual_value_usd: 24000
+created: 2024-01-10
+last_updated: 2025-09-30
+links:
+  runbook: https://docs.example.com/runbooks/m365-provisioning
+  sentry: https://sentry.io/organizations/example/m365-provisioning
+  repo: https://dev.azure.com/example/automation/_git/m365-provisioning
+api_keys:
+  - name: M365_APP_SECRET
+    system: Microsoft 365
+    expiration: 2026-06-01
+    notes: App registration for user and license management
+  - name: SHAREPOINT_CLIENT_SECRET
+    system: SharePoint
+    expiration: 2025-11-30
+    notes: Access to HR data stored in SharePoint lists

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400">
+  <defs>
+    <style>
+      .box { fill: #4A90E2; stroke: #2E5C8A; stroke-width: 2; }
+      .text { fill: white; font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .arrow { stroke: #333; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333" />
+    </marker>
+  </defs>
+
+  <!-- Timer Trigger -->
+  <rect x="50" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="110" y="185" class="text">Timer Trigger</text>
+  <text x="110" y="200" class="text" style="font-size: 12px;">(Daily)</text>
+
+  <!-- Azure Function -->
+  <rect x="240" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="300" y="185" class="text">Azure Function</text>
+  <text x="300" y="200" class="text" style="font-size: 12px;">(Group Sync)</text>
+
+  <!-- Azure AD -->
+  <rect x="430" y="80" width="120" height="60" class="box" rx="5"/>
+  <text x="490" y="115" class="text">Azure AD</text>
+  <text x="490" y="130" class="text" style="font-size: 12px;">(Read Users)</text>
+
+  <!-- Azure Groups -->
+  <rect x="430" y="220" width="120" height="60" class="box" rx="5"/>
+  <text x="490" y="255" class="text">Azure AD</text>
+  <text x="490" y="270" class="text" style="font-size: 12px;">(Update Groups)</text>
+
+  <!-- Logging -->
+  <rect x="620" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="680" y="185" class="text">Log Analytics</text>
+
+  <!-- Arrows -->
+  <line x1="170" y1="180" x2="240" y2="180" class="arrow"/>
+  <line x1="360" y1="165" x2="430" y2="120" class="arrow"/>
+  <line x1="360" y1="195" x2="430" y2="240" class="arrow"/>
+  <line x1="550" y1="180" x2="620" y2="180" class="arrow"/>
+</svg>

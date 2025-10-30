@@ -1,0 +1,35 @@
+name: ConnectWise Sales Order Sync
+author: bradley-wyatt
+department: sales
+description: Synchronizes sales orders from ConnectWise Manage to Azure SQL for reporting and analytics with AI-powered categorization
+tags:
+  - connectwise
+  - azure
+  - ai
+  - python
+systems:
+  - ConnectWise Manage
+  - Azure Functions
+  - Azure SQL Database
+  - OpenAI API
+time_saved_hours_per_month: 120
+annual_value_usd: 36000
+created: 2024-06-01
+last_updated: 2025-10-15
+links:
+  runbook: https://docs.example.com/runbooks/cw-sales-order-sync
+  sentry: https://sentry.io/organizations/example/cw-sales-order-sync
+  repo: https://dev.azure.com/example/automation/_git/cw-sales-order-sync
+api_keys:
+  - name: CW_API_KEY
+    system: ConnectWise Manage
+    expiration: 2026-01-01
+    notes: Public and private key pair for API access
+  - name: OPENAI_API_KEY
+    system: OpenAI
+    expiration: 2025-12-15
+    notes: Used for AI categorization of orders
+  - name: AZURE_SQL_CONNECTION
+    system: Azure SQL
+    expiration: null
+    notes: Managed Identity - no expiration

@@ -1,0 +1,71 @@
+---
+import type { Automation } from '../utils/data';
+
+interface Props {
+  automation: Automation;
+}
+
+const { automation } = Astro.props;
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  });
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+---
+
+<a href={`/automations/${automation.id}`} class="card block p-6 hover:scale-[1.02] transition-transform">
+  <div class="flex justify-between items-start mb-3">
+    <h3 class="text-xl font-bold text-gray-900">{automation.name}</h3>
+    <span class="badge bg-primary-100 text-primary-700">
+      {automation.department}
+    </span>
+  </div>
+
+  <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+    {automation.description}
+  </p>
+
+  <div class="flex flex-wrap gap-2 mb-4">
+    {automation.tags.slice(0, 3).map(tag => (
+      <span class="badge bg-gray-100 text-gray-700">
+        {tag}
+      </span>
+    ))}
+    {automation.tags.length > 3 && (
+      <span class="badge bg-gray-100 text-gray-500">
+        +{automation.tags.length - 3} more
+      </span>
+    )}
+  </div>
+
+  <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+    <div>
+      <p class="text-xs text-gray-500">Time Saved/Month</p>
+      <p class="text-lg font-semibold text-gray-900">
+        {automation.time_saved_hours_per_month}h
+      </p>
+    </div>
+    <div>
+      <p class="text-xs text-gray-500">Annual Value</p>
+      <p class="text-lg font-semibold text-green-600">
+        {formatCurrency(automation.annual_value_usd)}
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-4 text-xs text-gray-500">
+    Last updated: {formatDate(automation.last_updated)}
+  </div>
+</a>

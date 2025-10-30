@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400">
+  <defs>
+    <style>
+      .box { fill: #4A90E2; stroke: #2E5C8A; stroke-width: 2; }
+      .ai-box { fill: #10A37F; stroke: #0D8A6A; stroke-width: 2; }
+      .text { fill: white; font-family: Arial, sans-serif; font-size: 14px; text-anchor: middle; }
+      .arrow { stroke: #333; stroke-width: 2; fill: none; marker-end: url(#arrowhead); }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+      <polygon points="0 0, 10 3, 0 6" fill="#333" />
+    </marker>
+  </defs>
+
+  <!-- Timer Trigger -->
+  <rect x="30" y="150" width="100" height="60" class="box" rx="5"/>
+  <text x="80" y="185" class="text">Timer</text>
+  <text x="80" y="200" class="text" style="font-size: 12px;">(Hourly)</text>
+
+  <!-- Azure Function -->
+  <rect x="180" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="240" y="180" class="text">Azure Function</text>
+  <text x="240" y="195" class="text" style="font-size: 12px;">(Python)</text>
+
+  <!-- ConnectWise -->
+  <rect x="350" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="410" y="175" class="text">ConnectWise</text>
+  <text x="410" y="195" class="text" style="font-size: 12px;">(Fetch Orders)</text>
+
+  <!-- OpenAI -->
+  <rect x="520" y="80" width="120" height="60" class="ai-box" rx="5"/>
+  <text x="580" y="105" class="text">OpenAI</text>
+  <text x="580" y="125" class="text" style="font-size: 12px;">(Categorize)</text>
+
+  <!-- Azure SQL -->
+  <rect x="520" y="220" width="120" height="60" class="box" rx="5"/>
+  <text x="580" y="245" class="text">Azure SQL</text>
+  <text x="580" y="265" class="text" style="font-size: 12px;">(Store Data)</text>
+
+  <!-- Power BI -->
+  <rect x="720" y="150" width="120" height="60" class="box" rx="5"/>
+  <text x="780" y="185" class="text">Power BI</text>
+
+  <!-- Arrows -->
+  <line x1="130" y1="180" x2="180" y2="180" class="arrow"/>
+  <line x1="300" y1="180" x2="350" y2="180" class="arrow"/>
+  <line x1="470" y1="165" x2="520" y2="120" class="arrow"/>
+  <line x1="470" y1="195" x2="520" y2="240" class="arrow"/>
+  <line x1="640" y1="250" x2="780" y2="210" class="arrow"/>
+</svg>

@@ -1,0 +1,250 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { loadAutomations, loadEngineers } from '../../utils/data';
+import fs from 'fs';
+import path from 'path';
+
+export async function getStaticPaths() {
+  const automations = loadAutomations();
+  return automations.map(automation => ({
+    params: { id: automation.id },
+    props: { automation }
+  }));
+}
+
+const { automation } = Astro.props;
+const engineers = loadEngineers();
+const engineer = engineers.find(e => e.id === automation.author);
+
+// Load README if it exists
+let readmeContent = '';
+const readmePath = path.join(process.cwd(), 'automations', automation.id, 'README.md');
+if (fs.existsSync(readmePath)) {
+  readmeContent = fs.readFileSync(readmePath, 'utf8');
+}
+
+const formatDate = (dateStr: string) => {
+  return new Date(dateStr).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+---
+
+<BaseLayout title={`${automation.name} - Automation Catalog`} description={automation.description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <a href="/automations" class="inline-flex items-center text-primary-600 hover:text-primary-700 mb-6">
+      ← Back to Automations
+    </a>
+
+    <!-- Header -->
+    <div class="card p-8 mb-6">
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">{automation.name}</h1>
+          <p class="text-lg text-gray-600">{automation.description}</p>
+        </div>
+        <span class="badge bg-primary-100 text-primary-700 capitalize text-lg px-4 py-2">
+          {automation.department}
+        </span>
+      </div>
+
+      <!-- Tags -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        {automation.tags.map(tag => (
+          <span class="badge bg-gray-100 text-gray-700 text-sm">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <div class="border-l-4 border-primary-500 pl-4">
+          <p class="text-sm text-gray-600">Time Saved/Month</p>
+          <p class="text-3xl font-bold text-gray-900">{automation.time_saved_hours_per_month}h</p>
+        </div>
+        <div class="border-l-4 border-green-500 pl-4">
+          <p class="text-sm text-gray-600">Annual Value</p>
+          <p class="text-3xl font-bold text-green-600">{formatCurrency(automation.annual_value_usd)}</p>
+        </div>
+        <div class="border-l-4 border-blue-500 pl-4">
+          <p class="text-sm text-gray-600">Created</p>
+          <p class="text-lg font-semibold text-gray-900">{formatDate(automation.created)}</p>
+        </div>
+        <div class="border-l-4 border-purple-500 pl-4">
+          <p class="text-sm text-gray-600">Last Updated</p>
+          <p class="text-lg font-semibold text-gray-900">{formatDate(automation.last_updated)}</p>
+        </div>
+      </div>
+
+      <!-- Author -->
+      {engineer && (
+        <div class="flex items-center space-x-3 pt-4 border-t">
+          <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center text-primary-600 font-bold text-lg">
+            {engineer.name.split(' ').map(n => n[0]).join('')}
+          </div>
+          <div>
+            <p class="font-semibold text-gray-900">{engineer.name}</p>
+            <p class="text-sm text-gray-600">{engineer.role}</p>
+          </div>
+        </div>
+      )}
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Diagram -->
+        {automation.diagramPath && (
+          <div class="card p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Architecture Diagram</h2>
+            <div class="bg-gray-50 rounded-lg p-4">
+              <img
+                src={automation.diagramPath}
+                alt={`${automation.name} architecture diagram`}
+                class="w-full h-auto"
+              />
+            </div>
+          </div>
+        )}
+
+        <!-- README Content -->
+        {readmeContent && (
+          <div class="card p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Documentation</h2>
+            <div class="prose prose-sm max-w-none">
+              <div set:html={readmeContent} />
+            </div>
+          </div>
+        )}
+
+        <!-- Systems -->
+        <div class="card p-6">
+          <h2 class="text-2xl font-bold text-gray-900 mb-4">Systems & Integrations</h2>
+          <div class="flex flex-wrap gap-3">
+            {automation.systems.map(system => (
+              <div class="flex items-center space-x-2 bg-gray-50 px-4 py-2 rounded-lg">
+                <span class="text-2xl">🔗</span>
+                <span class="font-medium text-gray-900">{system}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Quick Links -->
+        <div class="card p-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Quick Links</h2>
+          <div class="space-y-3">
+            {automation.links.runbook && (
+              <a
+                href={automation.links.runbook}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div class="flex items-center space-x-2">
+                  <span class="text-xl">📖</span>
+                  <span class="font-medium text-gray-900">Runbook</span>
+                </div>
+              </a>
+            )}
+            {automation.links.sentry && (
+              <a
+                href={automation.links.sentry}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div class="flex items-center space-x-2">
+                  <span class="text-xl">🔍</span>
+                  <span class="font-medium text-gray-900">Sentry</span>
+                </div>
+              </a>
+            )}
+            {automation.links.repo && (
+              <a
+                href={automation.links.repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="block p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <div class="flex items-center space-x-2">
+                  <span class="text-xl">💻</span>
+                  <span class="font-medium text-gray-900">Source Code</span>
+                </div>
+              </a>
+            )}
+          </div>
+        </div>
+
+        <!-- API Keys & Credentials -->
+        {automation.api_keys && automation.api_keys.length > 0 && (
+          <div class="card p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">API Keys & Credentials</h2>
+            <div class="space-y-4">
+              {automation.api_keys.map(key => {
+                let status = 'Valid';
+                let statusColor = 'text-green-600';
+
+                if (key.expiration) {
+                  const daysUntilExpiration = Math.ceil(
+                    (new Date(key.expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+                  );
+
+                  if (daysUntilExpiration < 0) {
+                    status = 'Expired';
+                    statusColor = 'text-red-600';
+                  } else if (daysUntilExpiration <= 30) {
+                    status = `Expires in ${daysUntilExpiration}d`;
+                    statusColor = 'text-red-600';
+                  } else if (daysUntilExpiration <= 90) {
+                    status = `Expires in ${daysUntilExpiration}d`;
+                    statusColor = 'text-yellow-600';
+                  }
+                }
+
+                return (
+                  <div class="border-l-4 border-gray-300 pl-4 py-2">
+                    <div class="flex justify-between items-start mb-1">
+                      <h3 class="font-semibold text-gray-900">{key.name}</h3>
+                      <span class={`text-xs font-medium ${statusColor}`}>
+                        {status}
+                      </span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-1">{key.system}</p>
+                    {key.expiration && (
+                      <p class="text-xs text-gray-500">
+                        Expires: {formatDate(key.expiration)}
+                      </p>
+                    )}
+                    {key.notes && (
+                      <p class="text-xs text-gray-500 mt-2 italic">
+                        {key.notes}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</BaseLayout>
