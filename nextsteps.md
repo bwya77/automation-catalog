@@ -184,6 +184,7 @@ api_keys:
     system: Azure
     expiration: 2026-06-01
     notes: Optional notes about this credential
+    link: https://itglue.example.com/passwords/12345  # Optional: Link to IT Glue or password manager
 ```
 
 ### Step 3: Create diagram.svg

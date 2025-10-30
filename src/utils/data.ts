@@ -29,6 +29,7 @@ export interface ApiKey {
   system: string;
   expiration: string | null;
   notes?: string;
+  link?: string;
 }
 
 export interface Department {

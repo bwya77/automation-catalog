@@ -92,10 +92,12 @@ api_keys:
     system: Azure AD
     expiration: 2026-06-01
     notes: App registration for Graph API access
+    link: https://itglue.example.com/passwords/12345  # Optional: Link to credential in IT Glue or other password manager
   - name: SHAREPOINT_SECRET
     system: SharePoint
     expiration: 2025-12-15
     notes: Client credentials for SharePoint access
+    link: https://itglue.example.com/passwords/67890
 ```
 
 ---
@@ -284,12 +286,15 @@ api_keys:
     system: System Name          # Which system this key is for
     expiration: 2026-06-01      # Expiration date (YYYY-MM-DD) or null
     notes: Optional description  # Additional context
+    link: https://itglue.example.com/passwords/12345  # Optional: Link to credential manager (IT Glue, etc.)
 ```
 
 **Tips for API Keys:**
 - Use `null` for `expiration` if the key doesn't expire (e.g., Managed Identity)
 - Keys expiring in ≤30 days show in RED on dashboard
 - Keys expiring in 31-90 days show in YELLOW
+- Add `link` field to provide direct access to the credential in IT Glue or other password managers
+- The link opens in a new tab and displays with a key icon on the automation detail page
 - All expirations appear in the calendar view
 
 ---
