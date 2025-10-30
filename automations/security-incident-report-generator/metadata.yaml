@@ -1,6 +1,7 @@
 name: Security Incident Report Generator
 author: ted-thueson
 department: security
+customer: "internal"
 status: live
 description: Automatically generate Security Incident Reports (SIRs) from an existing .docx template whenever a ticket is moved to the “SIR Review” status, pulling relevant details from the ticket and other systems to create and attach a draft report—saving the Security Operations team time and ensuring consistency across all reports.
 tags:

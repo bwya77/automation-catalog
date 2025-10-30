@@ -5,7 +5,15 @@ import AutomationCard from '../components/AutomationCard.astro';
 import TimeSeriesChart from '../components/TimeSeriesChart';
 import { loadAutomations, getExpiringApiKeys, loadEngineers } from '../utils/data';
 
-const allAutomations = loadAutomations();
+// Get customer filter from query params
+const customerFilter = Astro.url.searchParams.get('customer');
+
+// Load all automations and apply customer filter if present
+let allAutomations = loadAutomations();
+if (customerFilter && customerFilter !== 'all') {
+  allAutomations = allAutomations.filter(a => a.customer === customerFilter);
+}
+
 const engineers = loadEngineers();
 
 // Filter to only live automations with a closed date for impact calculations

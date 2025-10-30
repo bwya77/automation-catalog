@@ -2,7 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { loadAutomations } from '../utils/data';
 
-const automations = loadAutomations();
+// Get customer filter from query params
+const customerFilter = Astro.url.searchParams.get('customer');
+
+// Load all automations and apply customer filter if present
+let automations = loadAutomations();
+if (customerFilter && customerFilter !== 'all') {
+  automations = automations.filter(a => a.customer === customerFilter);
+}
 
 // Collect all API keys with expirations
 const apiKeysWithExpiration: Array<{

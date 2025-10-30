@@ -1,6 +1,7 @@
 name: Proofpoint Auto Provision
 author: bradley-wyatt
 department: it
+customer: "internal"
 status: development
 description: Automated synchronization of Azure AD groups based on employee attributes and department changes
 tags:

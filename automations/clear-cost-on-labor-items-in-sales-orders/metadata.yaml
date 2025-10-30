@@ -1,6 +1,7 @@
 name: Clear Cost on Labor Items in Sales Orders
 author: bradley-wyatt
 department: finance
+customer: "internal"
 status: live
 description: In Connectwise Manage we want to esure that certain product (labor) sku's have the cost associated to them removed (set to $0.00).
 tags:

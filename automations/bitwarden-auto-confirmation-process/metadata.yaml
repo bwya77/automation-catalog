@@ -1,6 +1,7 @@
 name: Bitwarden Auto Confirmation Process
 author: bradley-wyatt
 department: product-management
+customer: "internal"
 status: live
 description: Process customer Bitwarden organizations, identify members that have been invited, accepted, and are waiting for confirmation, and automatically confirm those members to complete their onboarding.
 tags:

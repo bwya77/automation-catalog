@@ -1,6 +1,7 @@
 name: Sophos EDR Allow and Block List Export
 author: david-just
 department: product-management
+customer: "internal"
 status: live
 description: Automation that will export the Sophos EDR allow and block list for all customers.
 tags:

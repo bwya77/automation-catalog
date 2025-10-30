@@ -1,6 +1,8 @@
 ---
 import '../styles/global.css';
 import DarkModeToggle from '../components/DarkModeToggle';
+import CustomerFilter from '../components/CustomerFilter';
+import { loadAutomations } from '../utils/data';
 
 interface Props {
   title?: string;
@@ -11,6 +13,10 @@ const {
   title = 'Automation Catalog',
   description = 'DevOps Automation Team - Automation Tracking and Analytics'
 } = Astro.props;
+
+// Get unique customers for the filter
+const automations = loadAutomations();
+const customers = Array.from(new Set(automations.map(a => a.customer).filter(Boolean) as string[])).sort();
 ---
 
 <!DOCTYPE html>
@@ -36,7 +42,10 @@ const {
             <a href="/calendar" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Calendar</a>
           </div>
         </div>
-        <DarkModeToggle client:load />
+        <div class="flex items-center gap-4">
+          <CustomerFilter client:load customers={customers} />
+          <DarkModeToggle client:load />
+        </div>
       </div>
     </nav>
   </header>

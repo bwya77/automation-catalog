@@ -1,6 +1,7 @@
 name: Smart Call Routing Mitel Integration
 author: david-just
 department: executive
+customer: "internal"
 status: live
 description: Synchronizes sales orders from ConnectWise Manage to Azure SQL for reporting and analytics with AI-powered categorization
 tags:
