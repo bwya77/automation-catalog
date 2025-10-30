@@ -39,7 +39,6 @@ const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual
 
 // Calculate keys expiring this month (within 30 days)
 const keysExpiringThisMonth = getExpiringApiKeys(30).length;
-const previousKeysExpiring = getExpiringApiKeys(90).length - keysExpiringThisMonth;
 const growthExpiringKeys = keysExpiringThisMonth;
 
 // Generate time series data based on automation creation dates
@@ -161,12 +160,19 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
     </div>
 
     <!-- Time Series Chart -->
-    <div class="mb-8">
+    <div class="mb-8" id="timeSeriesContainer">
       <TimeSeriesChart
         client:load
         data={timeSeriesData}
         title="Automation Impact Trend"
       />
+    </div>
+    <div class="mb-8 hidden" id="timeSeriesFiltered">
+      <div class="card p-8 text-center">
+        <p class="text-gray-600 dark:text-gray-400">
+          📊 Chart filtered to customer selection. Switch to "All Customers" to view the full impact trend.
+        </p>
+      </div>
     </div>
 
     <!-- Two Column Layout -->
@@ -179,9 +185,11 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
             View All →
           </a>
         </div>
-        <div class="space-y-4">
+        <div class="space-y-4" id="recentUpdatesContainer">
           {recentAutomations.map(automation => (
-            <AutomationCard automation={automation} />
+            <div data-automation-id={automation.id} data-customer={automation.customer || ''}>
+              <AutomationCard automation={automation} />
+            </div>
           ))}
         </div>
       </div>
@@ -347,7 +355,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
     </div>
   </div>
 
-  <script define:vars={{ allAutomations, engineers }}>
+  <script is:inline define:vars={{ allAutomations, engineers }}>
     // Client-side filtering based on URL parameter
     function applyCustomerFilter() {
       const params = new URLSearchParams(window.location.search);
@@ -367,7 +375,6 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       const totalAnnualValue = filteredLiveAutomations.reduce((sum, a) => sum + a.annual_value_usd, 0);
 
       // Get expiring keys for filtered automations
-      const filteredAutomationIds = new Set(filteredAutomations.map(a => a.id));
       let expiringKeysCount = 0;
 
       filteredAutomations.forEach(automation => {
@@ -476,23 +483,27 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
         }
       }
 
+      // Hide time series chart when filtering
+      const timeSeriesContainer = document.getElementById('timeSeriesContainer');
+      const timeSeriesFiltered = document.getElementById('timeSeriesFiltered');
+      if (timeSeriesContainer && timeSeriesFiltered) {
+        timeSeriesContainer.style.display = 'none';
+        timeSeriesFiltered.style.display = 'block';
+      }
+
       // Filter recent automations display
-      const recentSection = document.querySelector('.space-y-4');
-      if (recentSection) {
-        const recentCards = recentSection.querySelectorAll('.card');
+      const recentContainer = document.getElementById('recentUpdatesContainer');
+      if (recentContainer) {
+        const recentCards = recentContainer.querySelectorAll('[data-automation-id]');
         filteredAutomations.sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime());
         const recentIds = new Set(filteredAutomations.slice(0, 3).map(a => a.id));
 
         recentCards.forEach(card => {
-          const link = card.querySelector('a');
-          if (link) {
-            const href = link.getAttribute('href');
-            const automationId = href.split('/').pop();
-            if (!recentIds.has(automationId)) {
-              card.style.display = 'none';
-            } else {
-              card.style.display = 'block';
-            }
+          const automationId = card.getAttribute('data-automation-id');
+          if (automationId && !recentIds.has(automationId)) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = 'block';
           }
         });
       }

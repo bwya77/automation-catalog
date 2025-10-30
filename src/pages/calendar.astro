@@ -192,7 +192,7 @@ const processedKeysByMonth = Array.from(keysByMonth.entries()).map(([month, keys
     )}
   </div>
 
-  <script define:vars={{ automations }}>
+  <script is:inline define:vars={{ automations }}>
     // Client-side filtering based on URL parameter
     function applyCustomerFilter() {
       const params = new URLSearchParams(window.location.search);
