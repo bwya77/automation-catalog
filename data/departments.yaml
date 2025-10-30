@@ -14,3 +14,6 @@ departments:
   - id: operations
     name: Operations
     description: General operations automations
+  - id: Security
+    name: Security
+    description: Security operations and incident response automations

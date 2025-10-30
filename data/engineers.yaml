@@ -1,13 +1,13 @@
 engineers:
   - id: bradley-wyatt
     name: Bradley Wyatt
-    role: Senior DevOps Automation Engineer
+    role: DevOps Automation Engineer
     avatar: /assets/avatars/bradley.png
-  - id: engineer-2
-    name: Engineer 2
+  - id: david-just
+    name: David Just
     role: DevOps Automation Engineer
     avatar: /assets/avatars/default.png
-  - id: engineer-3
-    name: Engineer 3
+  - id: ted-thueson
+    name: Ted Thueson
     role: DevOps Automation Engineer
     avatar: /assets/avatars/default.png
