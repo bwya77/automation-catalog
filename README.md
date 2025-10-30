@@ -65,6 +65,7 @@ Each automation has its own folder under `/automations/` containing:
 name: CW Sales Order Sync
 author: Bradley Wyatt
 department: Sales
+status: live  # Options: live, development, backlog
 tags:
   - Azure
   - ConnectWise

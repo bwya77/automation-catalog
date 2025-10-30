@@ -7,6 +7,7 @@ export interface Automation {
   name: string;
   author: string;
   department: string;
+  status: 'live' | 'development' | 'backlog';
   description: string;
   tags: string[];
   systems: string[];

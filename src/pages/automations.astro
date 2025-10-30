@@ -5,7 +5,7 @@ import { loadAutomations, loadEngineers } from '../utils/data';
 const automations = loadAutomations();
 const engineers = loadEngineers();
 
-// Get unique departments, tags, and authors for filters
+// Get unique departments, tags, authors, and statuses for filters
 const departments = Array.from(new Set(automations.map(a => a.department))).sort();
 const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
 const authors = Array.from(new Set(automations.map(a => a.author)))
@@ -14,6 +14,7 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
     return { id: authorId, name: engineer?.name || authorId };
   })
   .sort((a, b) => a.name.localeCompare(b.name));
+const statuses = ['live', 'development', 'backlog'] as const;
 ---
 
 <BaseLayout title="Automations - Automation Catalog">
@@ -28,7 +29,7 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
 
     <!-- Filters -->
     <div class="card p-6 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-4">
         <!-- Search -->
         <div>
           <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -90,6 +91,22 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
           </select>
         </div>
 
+        <!-- Status Filter -->
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Status
+          </label>
+          <select
+            id="status"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">All Statuses</option>
+            {statuses.map((status) => (
+              <option value={status} class="capitalize">{status}</option>
+            ))}
+          </select>
+        </div>
+
         <!-- Clear Button -->
         <div class="flex items-end">
           <button
@@ -111,7 +128,13 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
 
     <!-- Automations Grid -->
     <div id="automationsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {automations.map((automation) => (
+      {automations.map((automation) => {
+        const statusColors = {
+          live: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+          development: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
+          backlog: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+        };
+        return (
         <div
           class="automation-item"
           data-name={automation.name.toLowerCase()}
@@ -119,13 +142,19 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
           data-department={automation.department}
           data-tags={automation.tags.join(',')}
           data-author={automation.author}
+          data-status={automation.status}
         >
           <a href={`/automations/${automation.id}`} class="card block p-6 hover:scale-[1.02] transition-transform h-full">
             <div class="flex justify-between items-start mb-3">
               <h3 class="text-xl font-bold text-gray-900 dark:text-gray-100">{automation.name}</h3>
-              <span class="badge bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 capitalize">
-                {automation.department}
-              </span>
+              <div class="flex flex-col gap-1 items-end">
+                <span class="badge bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 capitalize">
+                  {automation.department}
+                </span>
+                <span class={`badge ${statusColors[automation.status]} capitalize text-xs`}>
+                  {automation.status}
+                </span>
+              </div>
             </div>
 
             <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
@@ -161,7 +190,8 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
             </div>
           </a>
         </div>
-      ))}
+        );
+      })}
     </div>
 
     <!-- No Results Message -->
@@ -182,6 +212,7 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
     const departmentSelect = document.getElementById('department') as HTMLSelectElement;
     const tagSelect = document.getElementById('tag') as HTMLSelectElement;
     const authorSelect = document.getElementById('author') as HTMLSelectElement;
+    const statusSelect = document.getElementById('status') as HTMLSelectElement;
     const clearButton = document.getElementById('clearFilters') as HTMLButtonElement;
     const automationItems = document.querySelectorAll('.automation-item');
     const resultsCount = document.getElementById('resultsCount') as HTMLSpanElement;
@@ -193,6 +224,7 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
       const selectedDept = departmentSelect.value;
       const selectedTag = tagSelect.value;
       const selectedAuthor = authorSelect.value;
+      const selectedStatus = statusSelect.value;
 
       let visibleCount = 0;
 
@@ -202,13 +234,15 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
         const department = item.getAttribute('data-department') || '';
         const tags = item.getAttribute('data-tags') || '';
         const author = item.getAttribute('data-author') || '';
+        const status = item.getAttribute('data-status') || '';
 
         const matchesSearch = !searchTerm || name.includes(searchTerm) || description.includes(searchTerm);
         const matchesDept = !selectedDept || department === selectedDept;
         const matchesTag = !selectedTag || tags.split(',').includes(selectedTag);
         const matchesAuthor = !selectedAuthor || author === selectedAuthor;
+        const matchesStatus = !selectedStatus || status === selectedStatus;
 
-        if (matchesSearch && matchesDept && matchesTag && matchesAuthor) {
+        if (matchesSearch && matchesDept && matchesTag && matchesAuthor && matchesStatus) {
           (item as HTMLElement).style.display = 'block';
           visibleCount++;
         } else {
@@ -231,12 +265,14 @@ const authors = Array.from(new Set(automations.map(a => a.author)))
     departmentSelect.addEventListener('change', filterAutomations);
     tagSelect.addEventListener('change', filterAutomations);
     authorSelect.addEventListener('change', filterAutomations);
+    statusSelect.addEventListener('change', filterAutomations);
 
     clearButton.addEventListener('click', () => {
       searchInput.value = '';
       departmentSelect.value = '';
       tagSelect.value = '';
       authorSelect.value = '';
+      statusSelect.value = '';
       filterAutomations();
     });
   </script>

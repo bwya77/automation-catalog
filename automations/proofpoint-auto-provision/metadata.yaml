@@ -1,7 +1,7 @@
-name: Azure Group Sync
+name: Proofpoint Auto Provision
 author: bradley-wyatt
 department: it
-status: live
+status: development
 description: Automated synchronization of Azure AD groups based on employee attributes and department changes
 tags:
   - azure
@@ -12,15 +12,18 @@ systems:
   - Azure Functions
 time_saved_hours_per_month: 40
 annual_value_usd: 12000
-created: 2024-03-15
-last_updated: 2025-10-20
+created: 2025-10-30
+last_updated: 2025-10-30
 links:
   runbook: https://docs.example.com/runbooks/azure-group-sync
   sentry: https://sentry.io/organizations/example/azure-group-sync
   repo: https://dev.azure.com/example/automation/_git/azure-group-sync
 api_keys:
-  - name: AZURE_CLIENT_SECRET
+  - name: Subscription Notification Manager
     system: Azure AD
-    expiration: 2026-03-01
-    notes: App registration for group management
-    link: https://itglue.example.com/passwords/12345
+    expiration: 2027-10-29
+    notes: App registration managing subscriptions
+  - name: Proofpoint User Provisioning
+    system:  Azure AD
+    expiration: 2027-10-29
+    notes: API key for looking up users in M365

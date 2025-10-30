@@ -64,6 +64,7 @@ Copy this template and fill in your automation's details:
 name: Your Automation Name
 author: your-engineer-id  # Must match an ID from data/engineers.yaml
 department: it  # Options: sales, it, hr, finance, operations
+status: live  # Options: live, development, backlog
 description: A brief description of what this automation does (1-2 sentences)
 
 tags:
@@ -261,6 +262,7 @@ git push origin main
 | `name` | String | Display name of automation | `"Azure VM Backup"` |
 | `author` | String | Engineer ID from `engineers.yaml` | `"bradley-wyatt"` |
 | `department` | String | Department ID | `"it"` (sales, it, hr, finance, operations) |
+| `status` | String | Current status | `"live"` (live, development, backlog) |
 | `description` | String | Brief description (1-2 sentences) | `"Automated backup of Azure VMs..."` |
 | `tags` | Array | Technology tags | `["azure", "powershell"]` |
 | `systems` | Array | Integrated systems | `["Azure Functions", "Azure AD"]` |
@@ -401,6 +403,7 @@ Before committing, ensure:
 - [ ] `metadata.yaml` has all required fields
 - [ ] `author` ID exists in `data/engineers.yaml`
 - [ ] `department` is valid (sales, it, hr, finance, operations)
+- [ ] `status` is valid (live, development, backlog)
 - [ ] All dates are in `YYYY-MM-DD` format
 - [ ] `diagram.svg` exists and displays correctly
 - [ ] All URLs in `links` are valid and accessible

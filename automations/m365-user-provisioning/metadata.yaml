@@ -1,6 +1,7 @@
 name: M365 User Provisioning
 author: engineer-2
 department: hr
+status: live
 description: Automated user provisioning in Microsoft 365 based on HR system changes, including license assignment and mailbox configuration
 tags:
   - m365

@@ -1,6 +1,7 @@
 name: ConnectWise Sales Order Sync
 author: bradley-wyatt
 department: sales
+status: backlog
 description: Synchronizes sales orders from ConnectWise Manage to Azure SQL for reporting and analytics with AI-powered categorization
 tags:
   - connectwise

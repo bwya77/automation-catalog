@@ -163,6 +163,7 @@ Create `automations/your-automation-name/metadata.yaml`:
 name: Your Automation Name
 author: bradley-wyatt  # Must match ID from data/engineers.yaml
 department: it  # sales, it, hr, finance, or operations
+status: live  # live, development, or backlog
 description: Brief description of what this automation does
 tags:
   - azure
