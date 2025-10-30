@@ -23,6 +23,6 @@ tags:
   - id: powershell
     name: PowerShell
     color: '#012456'
-  - id: python
-    name: Python
-    color: '#3776AB'
+  - id: n8n
+    name: N8N
+    color: '#376147'

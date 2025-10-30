@@ -3,6 +3,7 @@ author: ted-thueson
 department: security
 status: live
 description: Automatically generate Security Incident Reports (SIRs) from an existing .docx template whenever a ticket is moved to the “SIR Review” status, pulling relevant details from the ticket and other systems to create and attach a draft report—saving the Security Operations team time and ensuring consistency across all reports.
+tags:
   - ai
   - n8n
   - connectwise
@@ -16,3 +17,8 @@ last_updated: 2025-10-29
 links:
   - name: Source Code
     url: https://gitlab.com/atlas41/internal-devops/connectwise-manage/-/tree/fcc15ce00ac31b0fa3c3e82a581634a16558b7e6/Tickets/Security%20Incident%20Reporting
+api_keys:
+  - name: M365_APP_SECRET
+    system: Microsoft 365
+    expiration: 2026-06-01
+    notes: App registration for user and license management
