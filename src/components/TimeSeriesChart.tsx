@@ -17,7 +17,7 @@ type ViewMode = 'hours' | 'value' | 'both';
 export default function TimeSeriesChart({ data, title }: Props) {
   const [isDark, setIsDark] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
-  const [viewMode, setViewMode] = useState<ViewMode>('hours');
+  const [viewMode, setViewMode] = useState<ViewMode>('both');
   const windowSize = 6; // Show 6 months at a time
 
   useEffect(() => {

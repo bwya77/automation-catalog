@@ -225,6 +225,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
               {Array.from(new Set(automations.map(a => a.department))).map(dept => {
                 const deptAutomations = automations.filter(a => a.department === dept);
                 const deptTimeSaved = deptAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const deptMonthlyValue = Math.round(deptAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
 
                 return (
                   <div class="flex justify-between items-center">
@@ -235,7 +236,8 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
                       </span>
                     </div>
                     <div class="text-right">
-                      <span class="font-semibold text-gray-900 dark:text-gray-100">{deptTimeSaved}h/mo</span>
+                      <div class="font-semibold text-gray-900 dark:text-gray-100">{deptTimeSaved}h/mo</div>
+                      <div class="text-sm text-green-600 dark:text-green-400">{formatCurrency(deptMonthlyValue)}/mo</div>
                     </div>
                   </div>
                 );
@@ -255,6 +257,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
                 if (engineerAutomations.length === 0) return null;
 
                 const engineerTimeSaved = engineerAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const engineerMonthlyValue = Math.round(engineerAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
                 const liveCount = engineerAutomations.filter(a => a.status === 'live').length;
                 const devCount = engineerAutomations.filter(a => a.status === 'development').length;
                 const backlogCount = engineerAutomations.filter(a => a.status === 'backlog').length;
@@ -292,6 +295,9 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
                         <div class="text-xs text-gray-500 dark:text-gray-400">automation{engineerAutomations.length !== 1 ? 's' : ''}</div>
                         <div class="text-sm font-semibold text-primary-600 dark:text-primary-400 mt-1">
                           {engineerTimeSaved}h/mo
+                        </div>
+                        <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                          {formatCurrency(engineerMonthlyValue)}/mo
                         </div>
                       </div>
                     </div>

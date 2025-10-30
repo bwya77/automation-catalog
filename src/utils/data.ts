@@ -53,6 +53,7 @@ export interface Engineer {
   name: string;
   role: string;
   avatar: string;
+  email?: string;
 }
 
 export interface Tag {
