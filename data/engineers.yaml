@@ -6,7 +6,7 @@ engineers:
   - id: david-just
     name: David Just
     role: DevOps Automation Engineer
-    avatar: /assets/avatars/default.png
+    avatar: /assets/avatars/david-just.png
   - id: ted-thueson
     name: Ted Thueson
     role: DevOps Automation Engineer

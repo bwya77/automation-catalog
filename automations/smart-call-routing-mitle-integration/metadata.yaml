@@ -1,0 +1,39 @@
+name: Smart Call Routing Mitel Integration
+author: david-just
+department: executive
+status: live
+description: Synchronizes sales orders from ConnectWise Manage to Azure SQL for reporting and analytics with AI-powered categorization
+tags:
+  - connectwise
+  - azure
+  - azure-sql
+  - mitel
+  - azure-runbooks
+  - hybrid-runbook-worker
+systems:
+  - Mitel
+  - Azure
+  - Sentry
+  - Connectwise Manage
+time_saved_hours_per_month: 332.25
+annual_value_usd: 36700
+created: 2025-06-01
+last_updated: 2025-10-15
+links:
+  - name: Runbook
+    url: https://portal.azure.com/#@ntiva.net/resource/subscriptions/140c0639-524b-4e65-a7f1-f490039f13f1/resourceGroups/rg-hybridRW/providers/Microsoft.Automation/automationAccounts/aa-hybridsherwebapi/overview
+  - name: Sentry
+    url: https://ntiva-dev.sentry.io/issues/?project=4509729358544896
+  - name: Source Code
+    url: https://gitlab.com/atlas41/internal-devops/azure/-/tree/704de2be039b9bc9cdf15d8992b848424d0ac8a8/Mitel-Connectwise%20Contact%20Database
+  - name: Azure SQL Database
+    url: https://portal.azure.com/#@ntiva.net/resource/subscriptions/140c0639-524b-4e65-a7f1-f490039f13f1/resourceGroups/Azure_Ntiva_Internal_East/providers/Microsoft.Sql/servers/ntazintsql/databases/MITELCALLROUTE/overview
+api_keys:
+  - name: CWProjectDecomPubKey
+    system: ConnectWise Manage
+    notes: API member for Connectwise Manage Prod
+    link: https://ntiva.itglue.com/4259244/passwords/33823286
+  - name: Mitel DB Password
+    system: Mitel
+    notes: Password for Mitel Call Routing Database
+    link:  https://ntiva.itglue.com/4259244/passwords/23045202

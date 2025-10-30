@@ -17,3 +17,6 @@ departments:
   - id: security
     name: Security
     description: Security operations and incident response automations
+  - id: executive
+    name: Executive
+    description: Executive-level automations and reporting

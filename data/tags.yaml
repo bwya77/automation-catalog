@@ -29,3 +29,12 @@ tags:
   - id: n8n
     name: N8N
     color: '#376147'
+  - id: mitel
+    name: Mitel
+    color: '#E31C79'
+  - id: azure-sql
+    name: Azure SQL
+    color: '#0078D4'
+  - id: hybrid-runbook-worker
+    name: Hybrid Runbook Worker
+    color: '#1A4EBB'
