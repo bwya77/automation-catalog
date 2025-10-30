@@ -14,10 +14,10 @@ const totalAnnualValue = automations.reduce((sum, a) => sum + a.annual_value_usd
 const expiringKeys = getExpiringApiKeys(90);
 
 // Generate time series data based on automation creation dates
-// This shows cumulative time saved as automations were added
+// This shows cumulative time saved and value as automations were added
 const generateTimeSeriesData = () => {
   // Get the last 12 months
-  const months: { month: string; date: Date; hours: number }[] = [];
+  const months: { month: string; date: Date; hours: number; value: number }[] = [];
   const now = new Date();
 
   for (let i = 11; i >= 0; i--) {
@@ -29,25 +29,26 @@ const generateTimeSeriesData = () => {
     months.push({
       month: date.toLocaleDateString('en-US', { month: 'short' }),
       date: compareDate,
-      hours: 0
+      hours: 0,
+      value: 0
     });
   }
 
-  // Calculate cumulative time saved for each month
+  // Calculate cumulative time saved and value for each month
   months.forEach((monthData) => {
-    // Sum time saved from all automations created up to this month
-    const timeSavedUpToThisMonth = automations
-      .filter(a => {
-        const createdDate = new Date(a.created);
-        return createdDate <= monthData.date;
-      })
-      .reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+    // Sum time saved and value from all automations created up to this month
+    const automationsUpToThisMonth = automations.filter(a => {
+      const createdDate = new Date(a.created);
+      return createdDate <= monthData.date;
+    });
 
-    monthData.hours = timeSavedUpToThisMonth;
+    monthData.hours = automationsUpToThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+    // Convert annual value to monthly value by dividing by 12
+    monthData.value = Math.round(automationsUpToThisMonth.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
   });
 
   // Return in the format expected by the chart
-  return months.map(m => ({ month: m.month, hours: m.hours }));
+  return months.map(m => ({ month: m.month, hours: m.hours, value: m.value }));
 };
 
 const timeSeriesData = generateTimeSeriesData();
@@ -129,7 +130,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <TimeSeriesChart
         client:load
         data={timeSeriesData}
-        title="Time Saved Trend (Hours/Month)"
+        title="Automation Impact Trend"
       />
     </div>
 
