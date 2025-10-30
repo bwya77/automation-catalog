@@ -99,7 +99,7 @@ An Azure Automation PowerShell runbook handles the Anilookup table population an
         * Create object with database property mapping of the contact / company properties
 
 ### Automation Diagram
-```Mermaid
+```mermaid
 graph TB
     Start([Start Script]) --> Init[Initialize Sentry Monitoring]
     Init --> Creds[Load Credentials<br/>- DB Password<br/>- CW API Keys<br/>- Client ID]
