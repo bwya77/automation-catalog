@@ -9,9 +9,14 @@ interface Props {
     isPositive: boolean;
   };
   growth?: number;
+  growthUnit?: string;
 }
 
-const { title, value, subtitle, icon = '📊', trend, growth } = Astro.props;
+const { title, value, subtitle, icon = '📊', trend, growth, growthUnit } = Astro.props;
+
+const formatGrowth = (num: number) => {
+  return new Intl.NumberFormat('en-US').format(Math.abs(num));
+};
 ---
 
 <div class="card p-6 relative">
@@ -40,7 +45,7 @@ const { title, value, subtitle, icon = '📊', trend, growth } = Astro.props;
           ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
           : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
       }`}>
-        {growth > 0 ? '+' : ''}{growth}
+        {growthUnit === '$' ? '$' : ''}{growth > 0 ? '+' : ''}{formatGrowth(growth)}{growthUnit && growthUnit !== '$' ? growthUnit : ''}
       </span>
     </div>
   )}

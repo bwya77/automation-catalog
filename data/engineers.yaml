@@ -3,14 +3,14 @@ engineers:
     name: Bradley Wyatt
     role: DevOps Automation Engineer
     avatar: /assets/avatars/brad.png
-    email: bradley.wyatt@example.com
+    email: bradley.wyatt@ntiva.com
   - id: david-just
     name: David Just
     role: DevOps Automation Engineer
     avatar: /assets/avatars/david-just.png
-    email: david.just@example.com
+    email: david.just@ntiva.com
   - id: ted-thueson
     name: Ted Thueson
     role: DevOps Automation Engineer
     avatar: /assets/avatars/ted.png
-    email: ted.thueson@example.com
+    email: ted.thueson@ntiva.com
