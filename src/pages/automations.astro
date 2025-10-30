@@ -1,12 +1,19 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { loadAutomations } from '../utils/data';
+import { loadAutomations, loadEngineers } from '../utils/data';
 
 const automations = loadAutomations();
+const engineers = loadEngineers();
 
-// Get unique departments and tags for filters
+// Get unique departments, tags, and authors for filters
 const departments = Array.from(new Set(automations.map(a => a.department))).sort();
 const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
+const authors = Array.from(new Set(automations.map(a => a.author)))
+  .map(authorId => {
+    const engineer = engineers.find(e => e.id === authorId);
+    return { id: authorId, name: engineer?.name || authorId };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name));
 ---
 
 <BaseLayout title="Automations - Automation Catalog">
@@ -21,7 +28,7 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
 
     <!-- Filters -->
     <div class="card p-6 mb-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <!-- Search -->
         <div>
           <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -63,6 +70,22 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
             <option value="">All Tags</option>
             {allTags.map((tag) => (
               <option value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Author Filter -->
+        <div>
+          <label for="author" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Developer
+          </label>
+          <select
+            id="author"
+            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value="">All Developers</option>
+            {authors.map((author) => (
+              <option value={author.id}>{author.name}</option>
             ))}
           </select>
         </div>
@@ -158,6 +181,7 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
     const searchInput = document.getElementById('search') as HTMLInputElement;
     const departmentSelect = document.getElementById('department') as HTMLSelectElement;
     const tagSelect = document.getElementById('tag') as HTMLSelectElement;
+    const authorSelect = document.getElementById('author') as HTMLSelectElement;
     const clearButton = document.getElementById('clearFilters') as HTMLButtonElement;
     const automationItems = document.querySelectorAll('.automation-item');
     const resultsCount = document.getElementById('resultsCount') as HTMLSpanElement;
@@ -168,6 +192,7 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
       const searchTerm = searchInput.value.toLowerCase();
       const selectedDept = departmentSelect.value;
       const selectedTag = tagSelect.value;
+      const selectedAuthor = authorSelect.value;
 
       let visibleCount = 0;
 
@@ -176,12 +201,14 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
         const description = item.getAttribute('data-description') || '';
         const department = item.getAttribute('data-department') || '';
         const tags = item.getAttribute('data-tags') || '';
+        const author = item.getAttribute('data-author') || '';
 
         const matchesSearch = !searchTerm || name.includes(searchTerm) || description.includes(searchTerm);
         const matchesDept = !selectedDept || department === selectedDept;
         const matchesTag = !selectedTag || tags.split(',').includes(selectedTag);
+        const matchesAuthor = !selectedAuthor || author === selectedAuthor;
 
-        if (matchesSearch && matchesDept && matchesTag) {
+        if (matchesSearch && matchesDept && matchesTag && matchesAuthor) {
           (item as HTMLElement).style.display = 'block';
           visibleCount++;
         } else {
@@ -203,11 +230,13 @@ const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
     searchInput.addEventListener('input', filterAutomations);
     departmentSelect.addEventListener('change', filterAutomations);
     tagSelect.addEventListener('change', filterAutomations);
+    authorSelect.addEventListener('change', filterAutomations);
 
     clearButton.addEventListener('click', () => {
       searchInput.value = '';
       departmentSelect.value = '';
       tagSelect.value = '';
+      authorSelect.value = '';
       filterAutomations();
     });
   </script>
