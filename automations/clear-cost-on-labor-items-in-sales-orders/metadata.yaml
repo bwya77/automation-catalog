@@ -7,7 +7,6 @@ tags:
   - connectwise
   - azure
   - powershell
-  - power-automate
   - azure-runbooks
 systems:
   - Connectwise Manage

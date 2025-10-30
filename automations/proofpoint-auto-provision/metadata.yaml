@@ -30,7 +30,9 @@ api_keys:
     system: Azure AD
     expiration: 2027-10-29
     notes: App registration managing subscriptions
+    url: https://ntiva.itglue.com/4259244/passwords/33810967
   - name: Proofpoint User Provisioning
     system:  Azure AD
     expiration: 2027-10-29
     notes: API key for looking up users in M365
+    url: https://ntiva.itglue.com/4259244/passwords/33810989
