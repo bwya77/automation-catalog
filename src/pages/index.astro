@@ -22,9 +22,13 @@ const generateTimeSeriesData = () => {
 
   for (let i = 11; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    // Use the last day of the month (or today if it's the current month)
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const compareDate = i === 0 ? now : endOfMonth;
+
     months.push({
       month: date.toLocaleDateString('en-US', { month: 'short' }),
-      date: date,
+      date: compareDate,
       hours: 0
     });
   }
