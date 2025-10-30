@@ -2,15 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { loadAutomations, loadEngineers } from '../utils/data';
 
-// Get customer filter from query params
-const customerFilter = Astro.url.searchParams.get('customer');
-
-// Load all automations and apply customer filter if present
-let automations = loadAutomations();
-if (customerFilter && customerFilter !== 'all') {
-  automations = automations.filter(a => a.customer === customerFilter);
-}
-
+// Load all automations (client-side filtering will handle customer filter)
+const automations = loadAutomations();
 const engineers = loadEngineers();
 
 // Get unique departments, tags, authors, and statuses for filters
@@ -151,6 +144,7 @@ const statuses = ['live', 'development', 'backlog'] as const;
           data-tags={automation.tags.join(',')}
           data-author={automation.author}
           data-status={automation.status}
+          data-customer={automation.customer || ''}
         >
           <a href={`/automations/${automation.id}`} class="card block p-6 hover:scale-[1.02] transition-transform h-full">
             <div class="flex justify-between items-start mb-3">
@@ -227,6 +221,10 @@ const statuses = ['live', 'development', 'backlog'] as const;
     const automationsGrid = document.getElementById('automationsGrid') as HTMLDivElement;
     const noResults = document.getElementById('noResults') as HTMLDivElement;
 
+    // Get customer filter from URL
+    const params = new URLSearchParams(window.location.search);
+    const customerFilter = params.get('customer');
+
     function filterAutomations() {
       const searchTerm = searchInput.value.toLowerCase();
       const selectedDept = departmentSelect.value;
@@ -243,14 +241,16 @@ const statuses = ['live', 'development', 'backlog'] as const;
         const tags = item.getAttribute('data-tags') || '';
         const author = item.getAttribute('data-author') || '';
         const status = item.getAttribute('data-status') || '';
+        const customer = item.getAttribute('data-customer') || '';
 
         const matchesSearch = !searchTerm || name.includes(searchTerm) || description.includes(searchTerm);
         const matchesDept = !selectedDept || department === selectedDept;
         const matchesTag = !selectedTag || tags.split(',').includes(selectedTag);
         const matchesAuthor = !selectedAuthor || author === selectedAuthor;
         const matchesStatus = !selectedStatus || status === selectedStatus;
+        const matchesCustomer = !customerFilter || customerFilter === 'all' || customer === customerFilter;
 
-        if (matchesSearch && matchesDept && matchesTag && matchesAuthor && matchesStatus) {
+        if (matchesSearch && matchesDept && matchesTag && matchesAuthor && matchesStatus && matchesCustomer) {
           (item as HTMLElement).style.display = 'block';
           visibleCount++;
         } else {
@@ -283,5 +283,8 @@ const statuses = ['live', 'development', 'backlog'] as const;
       statusSelect.value = '';
       filterAutomations();
     });
+
+    // Apply filter on page load
+    filterAutomations();
   </script>
 </BaseLayout>

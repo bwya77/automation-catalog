@@ -2,14 +2,8 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { loadAutomations } from '../utils/data';
 
-// Get customer filter from query params
-const customerFilter = Astro.url.searchParams.get('customer');
-
-// Load all automations and apply customer filter if present
-let automations = loadAutomations();
-if (customerFilter && customerFilter !== 'all') {
-  automations = automations.filter(a => a.customer === customerFilter);
-}
+// Load all automations (client-side filtering will be applied)
+const automations = loadAutomations();
 
 // Collect all API keys with expirations
 const apiKeysWithExpiration: Array<{
@@ -197,4 +191,97 @@ const processedKeysByMonth = Array.from(keysByMonth.entries()).map(([month, keys
       </div>
     )}
   </div>
+
+  <script define:vars={{ automations }}>
+    // Client-side filtering based on URL parameter
+    function applyCustomerFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const customerFilter = params.get('customer');
+
+      if (!customerFilter || customerFilter === 'all') {
+        return; // No filtering needed, page shows all data
+      }
+
+      // Filter automations by customer
+      const filteredAutomations = automations.filter(a => a.customer === customerFilter);
+      const filteredAutomationIds = new Set(filteredAutomations.map(a => a.id));
+
+      // Collect and filter API keys
+      const apiKeysWithExpiration = [];
+      filteredAutomations.forEach(automation => {
+        if (!automation.api_keys) return;
+
+        automation.api_keys.forEach(key => {
+          if (key.expiration) {
+            apiKeysWithExpiration.push({
+              key: key.name,
+              system: key.system,
+              expiration: new Date(key.expiration),
+              automationId: automation.id,
+              automationName: automation.name,
+              notes: key.notes,
+            });
+          }
+        });
+      });
+
+      function getDaysUntilExpiration(date) {
+        return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      }
+
+      // Update summary cards
+      const summaryCards = document.querySelectorAll('.grid.grid-cols-1.md\\:grid-cols-3 .card');
+      if (summaryCards[0]) {
+        const totalCount = summaryCards[0].querySelector('.text-3xl');
+        if (totalCount) totalCount.textContent = apiKeysWithExpiration.length.toString();
+      }
+
+      if (summaryCards[1]) {
+        const expiring30Count = apiKeysWithExpiration.filter(k => {
+          const days = getDaysUntilExpiration(k.expiration);
+          return days <= 30 && days > 0;
+        }).length;
+        const expiring30Element = summaryCards[1].querySelector('.text-3xl');
+        if (expiring30Element) expiring30Element.textContent = expiring30Count.toString();
+      }
+
+      if (summaryCards[2]) {
+        const expiring90Count = apiKeysWithExpiration.filter(k => {
+          const days = getDaysUntilExpiration(k.expiration);
+          return days <= 90 && days > 30;
+        }).length;
+        const expiring90Element = summaryCards[2].querySelector('.text-3xl');
+        if (expiring90Element) expiring90Element.textContent = expiring90Count.toString();
+      }
+
+      // Filter month sections
+      const monthSections = document.querySelectorAll('.space-y-6 > .card');
+      monthSections.forEach(section => {
+        const keyItems = section.querySelectorAll('.space-y-4 > div');
+        let visibleCount = 0;
+
+        keyItems.forEach(item => {
+          const link = item.querySelector('a[href^="/automations/"]');
+          if (link) {
+            const href = link.getAttribute('href');
+            const automationId = href.split('/').pop();
+            if (!filteredAutomationIds.has(automationId)) {
+              item.style.display = 'none';
+            } else {
+              item.style.display = 'block';
+              visibleCount++;
+            }
+          }
+        });
+
+        // Hide entire month section if no keys visible
+        if (visibleCount === 0) {
+          section.style.display = 'none';
+        }
+      });
+    }
+
+    // Apply filter when page loads
+    document.addEventListener('DOMContentLoaded', applyCustomerFilter);
+  </script>
 </BaseLayout>

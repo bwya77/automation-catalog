@@ -5,15 +5,8 @@ import AutomationCard from '../components/AutomationCard.astro';
 import TimeSeriesChart from '../components/TimeSeriesChart';
 import { loadAutomations, getExpiringApiKeys, loadEngineers } from '../utils/data';
 
-// Get customer filter from query params
-const customerFilter = Astro.url.searchParams.get('customer');
-
-// Load all automations and apply customer filter if present
-let allAutomations = loadAutomations();
-if (customerFilter && customerFilter !== 'all') {
-  allAutomations = allAutomations.filter(a => a.customer === customerFilter);
-}
-
+// Load all data (client-side filtering will be applied)
+const allAutomations = loadAutomations();
 const engineers = loadEngineers();
 
 // Filter to only live automations with a closed date for impact calculations
@@ -353,4 +346,271 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       </div>
     </div>
   </div>
+
+  <script define:vars={{ allAutomations, engineers }}>
+    // Client-side filtering based on URL parameter
+    function applyCustomerFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const customerFilter = params.get('customer');
+
+      if (!customerFilter || customerFilter === 'all') {
+        return; // No filtering needed, page shows all data
+      }
+
+      // Filter automations by customer
+      const filteredAutomations = allAutomations.filter(a => a.customer === customerFilter);
+      const filteredLiveAutomations = filteredAutomations.filter(a => a.status === 'live' && a.closed);
+
+      // Recalculate stats
+      const totalCount = filteredAutomations.length;
+      const totalTimeSaved = filteredLiveAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+      const totalAnnualValue = filteredLiveAutomations.reduce((sum, a) => sum + a.annual_value_usd, 0);
+
+      // Get expiring keys for filtered automations
+      const filteredAutomationIds = new Set(filteredAutomations.map(a => a.id));
+      let expiringKeysCount = 0;
+
+      filteredAutomations.forEach(automation => {
+        if (automation.api_keys) {
+          automation.api_keys.forEach(key => {
+            if (key.expiration) {
+              const expiration = new Date(key.expiration);
+              const daysUntil = Math.ceil((expiration.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              if (daysUntil >= 0 && daysUntil <= 90) {
+                expiringKeysCount++;
+              }
+            }
+          });
+        }
+      });
+
+      // Calculate growth for filtered automations
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const automationsThisMonth = filteredLiveAutomations.filter(a => {
+        const closedDate = new Date(a.closed);
+        return closedDate >= currentMonthStart && closedDate <= currentMonthEnd;
+      });
+
+      const allAutomationsThisMonth = filteredAutomations.filter(a => {
+        const createdDate = new Date(a.created);
+        return createdDate >= currentMonthStart && createdDate <= currentMonthEnd;
+      });
+
+      const growthAutomations = allAutomationsThisMonth.length;
+      const growthTimeSaved = automationsThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+      const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual_value_usd, 0);
+
+      const keysExpiringThisMonth = filteredAutomations.reduce((count, automation) => {
+        if (automation.api_keys) {
+          automation.api_keys.forEach(key => {
+            if (key.expiration) {
+              const expiration = new Date(key.expiration);
+              const daysUntil = Math.ceil((expiration.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              if (daysUntil >= 0 && daysUntil <= 30) {
+                count++;
+              }
+            }
+          });
+        }
+        return count;
+      }, 0);
+
+      // Update stats cards in the DOM
+      const statsCards = document.querySelectorAll('.grid .card');
+      if (statsCards[0]) {
+        const countValue = statsCards[0].querySelector('.text-3xl');
+        const countGrowth = statsCards[0].querySelector('.text-xs.font-semibold');
+        if (countValue) countValue.textContent = totalCount.toString();
+        if (countGrowth && growthAutomations > 0) {
+          countGrowth.textContent = `+${growthAutomations} this month`;
+        } else if (countGrowth) {
+          countGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[1]) {
+        const timeSavedValue = statsCards[1].querySelector('.text-3xl');
+        const timeSavedGrowth = statsCards[1].querySelector('.text-xs.font-semibold');
+        if (timeSavedValue) timeSavedValue.textContent = `${totalTimeSaved}h`;
+        if (timeSavedGrowth && growthTimeSaved > 0) {
+          timeSavedGrowth.textContent = `+${growthTimeSaved}h this month`;
+        } else if (timeSavedGrowth) {
+          timeSavedGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[2]) {
+        const valueElement = statsCards[2].querySelector('.text-3xl');
+        const valueGrowth = statsCards[2].querySelector('.text-xs.font-semibold');
+        const formatted = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(totalAnnualValue);
+        if (valueElement) valueElement.textContent = formatted;
+        if (valueGrowth && growthAnnualValue > 0) {
+          const formattedGrowth = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(growthAnnualValue);
+          valueGrowth.textContent = `+${formattedGrowth} this month`;
+        } else if (valueGrowth) {
+          valueGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[3]) {
+        const keysValue = statsCards[3].querySelector('.text-3xl');
+        const keysGrowth = statsCards[3].querySelector('.text-xs.font-semibold');
+        if (keysValue) keysValue.textContent = expiringKeysCount.toString();
+        if (keysGrowth && keysExpiringThisMonth > 0) {
+          keysGrowth.textContent = `+${keysExpiringThisMonth} in 30 days`;
+        } else if (keysGrowth) {
+          keysGrowth.textContent = '';
+        }
+      }
+
+      // Filter recent automations display
+      const recentSection = document.querySelector('.space-y-4');
+      if (recentSection) {
+        const recentCards = recentSection.querySelectorAll('.card');
+        filteredAutomations.sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime());
+        const recentIds = new Set(filteredAutomations.slice(0, 3).map(a => a.id));
+
+        recentCards.forEach(card => {
+          const link = card.querySelector('a');
+          if (link) {
+            const href = link.getAttribute('href');
+            const automationId = href.split('/').pop();
+            if (!recentIds.has(automationId)) {
+              card.style.display = 'none';
+            } else {
+              card.style.display = 'block';
+            }
+          }
+        });
+      }
+
+      // Filter department breakdown
+      const deptBreakdown = document.querySelectorAll('.space-y-3')[0];
+      if (deptBreakdown) {
+        const deptItems = deptBreakdown.querySelectorAll('.flex.justify-between');
+        const filteredDepts = new Set(filteredAutomations.map(a => a.department));
+
+        deptItems.forEach(item => {
+          const deptName = item.querySelector('.font-medium')?.textContent?.trim().toLowerCase();
+          if (deptName && !filteredDepts.has(deptName)) {
+            item.style.display = 'none';
+          } else {
+            item.style.display = 'flex';
+
+            // Recalculate department stats
+            if (deptName) {
+              const deptAutomations = filteredLiveAutomations.filter(a => a.department === deptName);
+              const allDeptAutomations = filteredAutomations.filter(a => a.department === deptName);
+              const deptTimeSaved = deptAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+              const deptMonthlyValue = Math.round(deptAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+
+              const countSpan = item.querySelector('.text-sm.text-gray-500');
+              const timeDiv = item.querySelector('.text-right .font-semibold');
+              const valueDiv = item.querySelector('.text-right .text-sm');
+
+              if (countSpan) countSpan.textContent = `(${allDeptAutomations.length} automation${allDeptAutomations.length !== 1 ? 's' : ''})`;
+              if (timeDiv) timeDiv.textContent = `${deptTimeSaved}h/mo`;
+              if (valueDiv) {
+                const formatted = new Intl.NumberFormat('en-US', {
+                  style: 'currency',
+                  currency: 'USD',
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0
+                }).format(deptMonthlyValue);
+                valueDiv.textContent = `${formatted}/mo`;
+              }
+            }
+          }
+        });
+      }
+
+      // Filter engineer list
+      const engineerList = document.querySelectorAll('.space-y-3')[1];
+      if (engineerList) {
+        const engineerItems = engineerList.querySelectorAll('.border-l-4');
+
+        engineerItems.forEach(item => {
+          const engineerName = item.querySelector('.font-semibold')?.textContent?.trim();
+          if (engineerName) {
+            const engineer = engineers.find(e => e.name === engineerName);
+            if (engineer) {
+              const engineerAutomations = filteredLiveAutomations.filter(a => a.author === engineer.id);
+              const allEngineerAutomations = filteredAutomations.filter(a => a.author === engineer.id);
+
+              if (allEngineerAutomations.length === 0) {
+                item.style.display = 'none';
+              } else {
+                item.style.display = 'block';
+
+                // Recalculate engineer stats
+                const engineerTimeSaved = engineerAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const engineerMonthlyValue = Math.round(engineerAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+                const liveCount = allEngineerAutomations.filter(a => a.status === 'live').length;
+                const devCount = allEngineerAutomations.filter(a => a.status === 'development').length;
+                const backlogCount = allEngineerAutomations.filter(a => a.status === 'backlog').length;
+
+                const countDiv = item.querySelector('.font-bold.text-gray-900');
+                const countLabel = item.querySelector('.text-xs.text-gray-500');
+                const timeDiv = item.querySelector('.text-sm.font-semibold.text-primary-600');
+                const valueDiv = item.querySelector('.text-sm.font-semibold.text-green-600');
+
+                if (countDiv) countDiv.textContent = allEngineerAutomations.length.toString();
+                if (countLabel) countLabel.textContent = `automation${allEngineerAutomations.length !== 1 ? 's' : ''}`;
+                if (timeDiv) timeDiv.textContent = `${engineerTimeSaved}h/mo`;
+                if (valueDiv) {
+                  const formatted = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(engineerMonthlyValue);
+                  valueDiv.textContent = `${formatted}/mo`;
+                }
+
+                // Update status badges
+                const badgeContainer = item.querySelector('.flex.gap-2.flex-wrap');
+                if (badgeContainer) {
+                  badgeContainer.innerHTML = '';
+                  if (liveCount > 0) {
+                    const liveBadge = document.createElement('span');
+                    liveBadge.className = 'badge bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs';
+                    liveBadge.textContent = `${liveCount} live`;
+                    badgeContainer.appendChild(liveBadge);
+                  }
+                  if (devCount > 0) {
+                    const devBadge = document.createElement('span');
+                    devBadge.className = 'badge bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-xs';
+                    devBadge.textContent = `${devCount} dev`;
+                    badgeContainer.appendChild(devBadge);
+                  }
+                  if (backlogCount > 0) {
+                    const backlogBadge = document.createElement('span');
+                    backlogBadge.className = 'badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs';
+                    backlogBadge.textContent = `${backlogCount} backlog`;
+                    badgeContainer.appendChild(backlogBadge);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Apply filter when page loads
+    document.addEventListener('DOMContentLoaded', applyCustomerFilter);
+  </script>
 </BaseLayout>
