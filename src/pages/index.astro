@@ -15,11 +15,11 @@ const expiringKeys = getExpiringApiKeys(90);
 // Generate time series data based on automation creation dates
 // This shows cumulative time saved as automations were added
 const generateTimeSeriesData = () => {
-  // Get the last 6 months
+  // Get the last 12 months
   const months: { month: string; date: Date; hours: number }[] = [];
   const now = new Date();
 
-  for (let i = 5; i >= 0; i--) {
+  for (let i = 11; i >= 0; i--) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     months.push({
       month: date.toLocaleDateString('en-US', { month: 'short' }),
