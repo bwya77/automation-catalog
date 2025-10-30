@@ -17,3 +17,13 @@ last_updated: 2025-10-29
 links:
   - name: Source Code
     url: https://gitlab.com/atlas41/internal-devops/connectwise-manage/-/tree/fcc15ce00ac31b0fa3c3e82a581634a16558b7e6/Tickets/Security%20Incident%20Reporting
+api_keys:
+  - name: API_Natalie_SIR_Review_Key
+    system: Connectwise Manage
+    notes: Connectwise Manage API key 
+    url: https://ntiva.itglue.com/4259244/passwords/33387364
+  - name: OpenAI_Natalie-SOC_API_Key
+    system:  Open AI
+    expiration: 2027-10-29
+    notes: API key for OpenAI
+    url: https://ntiva.itglue.com/4259244/passwords/32955145
