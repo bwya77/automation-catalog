@@ -431,22 +431,14 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
         const countValue = statsCards[0].querySelector('.text-3xl');
         const countGrowth = statsCards[0].querySelector('.text-xs.font-semibold');
         if (countValue) countValue.textContent = totalCount.toString();
-        if (countGrowth && growthAutomations > 0) {
-          countGrowth.textContent = `+${growthAutomations} this month`;
-        } else if (countGrowth) {
-          countGrowth.textContent = '';
-        }
+        if (countGrowth) countGrowth.textContent = ''; // Hide growth when filtering
       }
 
       if (statsCards[1]) {
         const timeSavedValue = statsCards[1].querySelector('.text-3xl');
         const timeSavedGrowth = statsCards[1].querySelector('.text-xs.font-semibold');
         if (timeSavedValue) timeSavedValue.textContent = `${totalTimeSaved}h`;
-        if (timeSavedGrowth && growthTimeSaved > 0) {
-          timeSavedGrowth.textContent = `+${growthTimeSaved}h this month`;
-        } else if (timeSavedGrowth) {
-          timeSavedGrowth.textContent = '';
-        }
+        if (timeSavedGrowth) timeSavedGrowth.textContent = ''; // Hide growth when filtering
       }
 
       if (statsCards[2]) {
@@ -459,28 +451,14 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
           maximumFractionDigits: 0
         }).format(totalAnnualValue);
         if (valueElement) valueElement.textContent = formatted;
-        if (valueGrowth && growthAnnualValue > 0) {
-          const formattedGrowth = new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-          }).format(growthAnnualValue);
-          valueGrowth.textContent = `+${formattedGrowth} this month`;
-        } else if (valueGrowth) {
-          valueGrowth.textContent = '';
-        }
+        if (valueGrowth) valueGrowth.textContent = ''; // Hide growth when filtering
       }
 
       if (statsCards[3]) {
         const keysValue = statsCards[3].querySelector('.text-3xl');
         const keysGrowth = statsCards[3].querySelector('.text-xs.font-semibold');
         if (keysValue) keysValue.textContent = expiringKeysCount.toString();
-        if (keysGrowth && keysExpiringThisMonth > 0) {
-          keysGrowth.textContent = `+${keysExpiringThisMonth} in 30 days`;
-        } else if (keysGrowth) {
-          keysGrowth.textContent = '';
-        }
+        if (keysGrowth) keysGrowth.textContent = ''; // Hide growth when filtering
       }
 
       // Hide time series chart when filtering
