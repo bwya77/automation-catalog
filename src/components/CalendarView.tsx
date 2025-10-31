@@ -141,19 +141,19 @@ export default function CalendarView({ apiKeys }: CalendarViewProps) {
         </div>
 
         {/* Day headers */}
-        <div className="grid grid-cols-7 gap-2 mb-2">
+        <div className="grid grid-cols-7 border-l border-t border-gray-200 dark:border-gray-700">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide py-2">
+            <div key={day} className="text-center text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide py-2 border-r border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
               {day}
             </div>
           ))}
         </div>
 
         {/* Calendar grid */}
-        <div className="grid grid-cols-7 gap-2">
+        <div className="grid grid-cols-7 border-l border-t border-gray-200 dark:border-gray-700">
           {calendarDays.map((day, index) => {
             if (day === null) {
-              return <div key={`empty-${index}`} className="aspect-square" />;
+              return <div key={`empty-${index}`} className="min-h-[100px] border-r border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50" />;
             }
 
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
@@ -173,27 +173,53 @@ export default function CalendarView({ apiKeys }: CalendarViewProps) {
               date.getMonth() === selectedDate.getMonth() &&
               date.getFullYear() === selectedDate.getFullYear();
 
+            const maxKeysToShow = 3;
+            const visibleKeys = keysForDay.slice(0, maxKeysToShow);
+            const remainingCount = keysForDay.length - maxKeysToShow;
+
             return (
               <button
                 key={day}
                 onClick={() => setSelectedDate(hasKeys ? date : null)}
                 className={`
-                  aspect-square p-2 rounded-lg transition-all relative
-                  ${hasKeys ? 'cursor-pointer hover:scale-105' : 'cursor-default'}
-                  ${isToday ? 'ring-2 ring-primary-500 dark:ring-primary-400' : ''}
-                  ${isSelected ? 'bg-primary-100 dark:bg-primary-900' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}
+                  min-h-[100px] p-1.5 transition-all relative border-r border-b border-gray-200 dark:border-gray-700
+                  ${hasKeys ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800' : 'cursor-default bg-white dark:bg-gray-900'}
+                  ${isToday ? 'ring-2 ring-inset ring-primary-500 dark:ring-primary-400 bg-primary-50 dark:bg-primary-950' : ''}
+                  ${isSelected ? 'bg-primary-100 dark:bg-primary-900 ring-2 ring-inset ring-primary-600' : ''}
                 `}
               >
-                <span className={`text-sm font-medium ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-gray-900 dark:text-gray-100'}`}>
-                  {day}
-                </span>
+                <div className="flex justify-between items-start mb-1">
+                  <span className={`text-xs font-semibold ${isToday ? 'text-primary-600 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                    {day}
+                  </span>
+                </div>
 
                 {hasKeys && (
-                  <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 flex gap-1">
-                    {hasExpired && <div className="w-1.5 h-1.5 rounded-full bg-red-600" />}
-                    {hasUrgent && <div className="w-1.5 h-1.5 rounded-full bg-red-500" />}
-                    {hasWarning && <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />}
-                    {!hasExpired && !hasUrgent && !hasWarning && <div className="w-1.5 h-1.5 rounded-full bg-green-500" />}
+                  <div className="space-y-0.5 mt-1">
+                    {visibleKeys.map((key, idx) => {
+                      const bgClass = key.isExpired
+                        ? 'bg-red-600 text-white'
+                        : key.isUrgent
+                        ? 'bg-red-500 text-white'
+                        : key.isWarning
+                        ? 'bg-yellow-500 text-gray-900'
+                        : 'bg-green-500 text-white';
+
+                      return (
+                        <div
+                          key={idx}
+                          className={`text-[10px] px-1 py-0.5 rounded truncate font-medium ${bgClass}`}
+                          title={key.key}
+                        >
+                          {key.key}
+                        </div>
+                      );
+                    })}
+                    {remainingCount > 0 && (
+                      <div className="text-[10px] px-1 py-0.5 rounded bg-gray-400 dark:bg-gray-600 text-white font-medium">
+                        +{remainingCount} more
+                      </div>
+                    )}
                   </div>
                 )}
               </button>
@@ -267,23 +293,24 @@ export default function CalendarView({ apiKeys }: CalendarViewProps) {
 
       {/* Legend */}
       <div className="card p-5">
-        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Legend</h3>
+        <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Color Legend</h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Keys are shown on their expiration date and color-coded by urgency:</p>
         <div className="flex flex-wrap gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-600" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Expired</span>
+            <div className="w-4 h-3 rounded bg-red-600" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Expired (overdue)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Urgent (≤30 days)</span>
+            <div className="w-4 h-3 rounded bg-red-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Urgent (expires in ≤30 days)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-yellow-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Warning (31-90 days)</span>
+            <div className="w-4 h-3 rounded bg-yellow-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Warning (expires in 31-90 days)</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-green-500" />
-            <span className="text-sm text-gray-600 dark:text-gray-400">Good (&gt;90 days)</span>
+            <div className="w-4 h-3 rounded bg-green-500" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Good (expires in &gt;90 days)</span>
           </div>
         </div>
       </div>
