@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface ApiKeyExpiration {
   key: string;
@@ -20,12 +20,14 @@ interface CalendarViewProps {
     expiration: string;
     automationId: string;
     automationName: string;
+    customer?: string;
     notes?: string;
   }>;
   automations: Array<{
     id: string;
     name: string;
     closed?: string;
+    customer?: string;
   }>;
 }
 
@@ -41,10 +43,27 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
   const [viewMode, setViewMode] = useState<ViewMode>('calendar');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [customerFilter, setCustomerFilter] = useState<string>('all');
+
+  // Read customer filter from URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const customer = params.get('customer') || 'all';
+    setCustomerFilter(customer);
+  }, []);
 
   const getDaysUntilExpiration = (date: Date) => {
     return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   };
+
+  // Filter data based on customer selection
+  const filteredApiKeys = customerFilter === 'all'
+    ? apiKeys
+    : apiKeys.filter(key => key.customer === customerFilter);
+
+  const filteredAutomations = customerFilter === 'all'
+    ? automations
+    : automations.filter(a => a.customer === customerFilter);
 
   // Helper to parse date string and create local date (ignoring timezone)
   const parseLocalDate = (dateInput: string | Date): Date => {
@@ -62,7 +81,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
     return new Date(year, month - 1, day);
   };
 
-  const processedKeys: ApiKeyExpiration[] = apiKeys.map(key => {
+  const processedKeys: ApiKeyExpiration[] = filteredApiKeys.map(key => {
     const expiration = parseLocalDate(key.expiration);
     const daysUntil = getDaysUntilExpiration(expiration);
     const isExpired = daysUntil < 0;
@@ -80,7 +99,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
   });
 
   // Process completed automations
-  const completedAutomations: CompletedAutomation[] = automations
+  const completedAutomations: CompletedAutomation[] = filteredAutomations
     .filter(a => a.closed)
     .map(a => ({
       id: a.id,

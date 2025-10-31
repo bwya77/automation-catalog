@@ -13,6 +13,7 @@ const apiKeysWithExpiration: Array<{
   expiration: Date;
   automationId: string;
   automationName: string;
+  customer?: string;
   notes?: string;
 }> = [];
 
@@ -27,6 +28,7 @@ automations.forEach(automation => {
         expiration: new Date(key.expiration),
         automationId: automation.id,
         automationName: automation.name,
+        customer: automation.customer,
         notes: key.notes,
       });
     }
@@ -43,6 +45,7 @@ const serializedKeys = apiKeysWithExpiration.map(key => ({
   expiration: key.expiration.toISOString(),
   automationId: key.automationId,
   automationName: key.automationName,
+  customer: key.customer,
   notes: key.notes,
 }));
 
@@ -106,7 +109,8 @@ const getDaysUntilExpiration = (date: Date) => {
         automations={automations.map(a => ({
           id: a.id,
           name: a.name,
-          closed: a.closed
+          closed: a.closed,
+          customer: a.customer
         }))}
       />
     ) : (
