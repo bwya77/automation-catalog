@@ -48,9 +48,10 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
 
   // Helper to parse date string and create local date (ignoring timezone)
   const parseLocalDate = (dateString: string): Date => {
-    const date = new Date(dateString);
-    // Create a new date using local timezone components
-    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    // Parse YYYY-MM-DD format directly without timezone conversion
+    const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+    // Month is 0-indexed in JavaScript Date
+    return new Date(year, month - 1, day);
   };
 
   const processedKeys: ApiKeyExpiration[] = apiKeys.map(key => {
