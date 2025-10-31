@@ -41,9 +41,10 @@ const customers = Array.from(new Set(automations.map(a => a.customer).filter(Boo
   <header class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
     <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <div class="flex items-center space-x-8">
-          <a href="/" class="text-2xl font-bold text-primary-600 dark:text-primary-400">
-            🤖 Automation Catalog
+        <div class="flex items-center space-x-4 md:space-x-8">
+          <a href="/" class="text-base sm:text-xl md:text-2xl font-bold text-primary-600 dark:text-primary-400">
+            <span class="hidden sm:inline">🤖 Automation Catalog</span>
+            <span class="sm:hidden">🤖 Catalog</span>
           </a>
           <div class="hidden md:flex space-x-6">
             <a href="/" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Dashboard</a>
@@ -51,13 +52,93 @@ const customers = Array.from(new Set(automations.map(a => a.customer).filter(Boo
             <a href="/calendar" class="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Calendar</a>
           </div>
         </div>
-        <div class="flex items-center gap-4">
-          <CustomerFilter client:load customers={customers} />
-          <DarkModeToggle client:load />
+        <div class="flex items-center gap-2 sm:gap-4">
+          <div class="hidden sm:flex items-center gap-2 sm:gap-4">
+            <CustomerFilter client:load customers={customers} />
+            <DarkModeToggle client:load />
+          </div>
+          <!-- Mobile menu button -->
+          <button
+            id="mobile-menu-button"
+            type="button"
+            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+            aria-controls="mobile-menu"
+            aria-expanded="false"
+          >
+            <span class="sr-only">Open main menu</span>
+            <!-- Hamburger icon -->
+            <svg id="menu-icon-open" class="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <!-- Close icon (hidden by default) -->
+            <svg id="menu-icon-close" class="hidden h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile menu, hidden by default -->
+      <div class="hidden md:hidden" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <a href="/" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Dashboard</a>
+          <a href="/automations" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Automations</a>
+          <a href="/calendar" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">Calendar</a>
+          <!-- Mobile filters -->
+          <div class="sm:hidden pt-3 pb-2 border-t border-gray-200 dark:border-gray-700 space-y-3">
+            <div class="px-3">
+              <CustomerFilter client:load customers={customers} />
+            </div>
+            <div class="px-3 flex justify-between items-center">
+              <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Theme</span>
+              <DarkModeToggle client:load />
+            </div>
+          </div>
         </div>
       </div>
     </nav>
   </header>
+
+  <script is:inline>
+    // Mobile menu toggle
+    document.addEventListener('DOMContentLoaded', function() {
+      const button = document.getElementById('mobile-menu-button');
+      const menu = document.getElementById('mobile-menu');
+      const openIcon = document.getElementById('menu-icon-open');
+      const closeIcon = document.getElementById('menu-icon-close');
+
+      if (button && menu && openIcon && closeIcon) {
+        button.addEventListener('click', function() {
+          const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+          // Toggle menu visibility
+          menu.classList.toggle('hidden');
+
+          // Toggle icons
+          openIcon.classList.toggle('hidden');
+          openIcon.classList.toggle('block');
+          closeIcon.classList.toggle('hidden');
+          closeIcon.classList.toggle('block');
+
+          // Update aria-expanded
+          button.setAttribute('aria-expanded', !isExpanded);
+        });
+
+        // Close menu when clicking on a link
+        const menuLinks = menu.querySelectorAll('a');
+        menuLinks.forEach(link => {
+          link.addEventListener('click', function() {
+            menu.classList.add('hidden');
+            openIcon.classList.remove('hidden');
+            openIcon.classList.add('block');
+            closeIcon.classList.add('hidden');
+            closeIcon.classList.remove('block');
+            button.setAttribute('aria-expanded', 'false');
+          });
+        });
+      }
+    });
+  </script>
 
   <main class="flex-grow">
     <slot />

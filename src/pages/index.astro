@@ -113,11 +113,11 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
 ---
 
 <BaseLayout title="Dashboard - Automation Catalog">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
     <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-4xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
         Overview of all DevOps automations and their impact
       </p>
     </div>
@@ -180,8 +180,8 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <!-- Recent Automations -->
       <div>
         <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Updates</h2>
-          <a href="/automations" class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Updates</h2>
+          <a href="/automations" class="text-sm sm:text-base text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium whitespace-nowrap">
             View All →
           </a>
         </div>
@@ -196,7 +196,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
 
       <!-- Upcoming Expirations -->
       <div>
-        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Upcoming Expirations</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Upcoming Expirations</h2>
         <div class="card p-6">
           {expiringKeys.length === 0 ? (
             <p class="text-gray-500 dark:text-gray-400 text-center py-8">
