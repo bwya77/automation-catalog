@@ -46,8 +46,15 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
     return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
   };
 
+  // Helper to parse date string and create local date (ignoring timezone)
+  const parseLocalDate = (dateString: string): Date => {
+    const date = new Date(dateString);
+    // Create a new date using local timezone components
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  };
+
   const processedKeys: ApiKeyExpiration[] = apiKeys.map(key => {
-    const expiration = new Date(key.expiration);
+    const expiration = parseLocalDate(key.expiration);
     const daysUntil = getDaysUntilExpiration(expiration);
     const isExpired = daysUntil < 0;
     const isUrgent = daysUntil > 0 && daysUntil <= 30;
@@ -69,7 +76,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
     .map(a => ({
       id: a.id,
       name: a.name,
-      closed: new Date(a.closed!),
+      closed: parseLocalDate(a.closed!),
     }));
 
   // Get days in month
