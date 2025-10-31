@@ -106,7 +106,7 @@ const getDaysUntilExpiration = (date: Date) => {
         automations={automations.map(a => ({
           id: a.id,
           name: a.name,
-          closed: a.closed ? (typeof a.closed === 'string' ? a.closed : a.closed.toISOString()) : undefined
+          closed: a.closed
         }))}
       />
     ) : (
