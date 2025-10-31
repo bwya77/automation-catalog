@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface ApiKeyExpiration {
   key: string;
@@ -47,9 +47,14 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
   };
 
   // Helper to parse date string and create local date (ignoring timezone)
-  const parseLocalDate = (dateString: string): Date => {
+  const parseLocalDate = (dateInput: string | Date): Date => {
+    // If already a Date object, extract components and create local date
+    if (dateInput instanceof Date) {
+      return new Date(dateInput.getFullYear(), dateInput.getMonth(), dateInput.getDate());
+    }
+
     // Parse YYYY-MM-DD format directly without timezone conversion
-    const [year, month, day] = dateString.split('T')[0].split('-').map(Number);
+    const [year, month, day] = dateInput.split('T')[0].split('-').map(Number);
     // Month is 0-indexed in JavaScript Date
     return new Date(year, month - 1, day);
   };
@@ -273,9 +278,6 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
             const hasKeys = keysForDay.length > 0;
             const hasCompleted = completedForDay.length > 0;
             const hasAnyEvents = hasKeys || hasCompleted;
-            const hasExpired = keysForDay.some(k => k.isExpired);
-            const hasUrgent = keysForDay.some(k => k.isUrgent);
-            const hasWarning = keysForDay.some(k => k.isWarning);
 
             const isToday =
               date.getDate() === new Date().getDate() &&
