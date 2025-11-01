@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { loadAutomations } from '../utils/data';
+import { loadAutomations, loadEmojis } from '../utils/data';
 import CalendarView from '../components/CalendarView';
 
 // Load all automations (client-side filtering will be applied)
 const automations = loadAutomations();
+
+// Load emoji configuration
+const emojis = loadEmojis();
 
 // Collect all API keys with expirations
 const apiKeysWithExpiration: Array<{
@@ -72,7 +75,7 @@ const getDaysUntilExpiration = (date: Date) => {
             <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Keys Tracked</p>
             <p id="totalKeys" class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{apiKeysWithExpiration.length}</p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">🔑</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.key}</div>
         </div>
       </div>
 
@@ -84,7 +87,7 @@ const getDaysUntilExpiration = (date: Date) => {
               {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 30 && getDaysUntilExpiration(k.expiration) > 0).length}
             </p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">⚠️</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.warning}</div>
         </div>
       </div>
 
@@ -96,7 +99,7 @@ const getDaysUntilExpiration = (date: Date) => {
               {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 90 && getDaysUntilExpiration(k.expiration) > 30).length}
             </p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">📅</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.calendar}</div>
         </div>
       </div>
     </div>

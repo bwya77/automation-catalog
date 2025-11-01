@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { loadAutomations, loadEngineers, loadTags } from '../utils/data';
+import { loadAutomations, loadEngineers, loadTags, loadEmojis } from '../utils/data';
 
 // Load all automations (client-side filtering will handle customer filter)
 const automations = loadAutomations();
 const engineers = loadEngineers();
+
+// Load emoji configuration
+const emojis = loadEmojis();
 
 // Load tags to get colors
 const tagsWithColors = loadTags();
@@ -52,7 +55,7 @@ const statuses = ['live', 'development', 'backlog'] as const;
             <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Automations</p>
             <p id="widgetTotalAutomations" class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{automations.length}</p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">🤖</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.automation}</div>
         </div>
       </div>
 
@@ -64,7 +67,7 @@ const statuses = ['live', 'development', 'backlog'] as const;
               {automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0)}h
             </p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">⏱️</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.timeSaved}</div>
         </div>
       </div>
 
@@ -76,7 +79,7 @@ const statuses = ['live', 'development', 'backlog'] as const;
               ${automations.reduce((sum, a) => sum + a.annual_value_usd, 0).toLocaleString()}
             </p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">💰</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.money}</div>
         </div>
       </div>
 
@@ -88,7 +91,7 @@ const statuses = ['live', 'development', 'backlog'] as const;
               {Math.round(automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0) / automations.length)}h
             </p>
           </div>
-          <div class="text-3xl opacity-70 ml-3">📊</div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.chart}</div>
         </div>
       </div>
     </div>

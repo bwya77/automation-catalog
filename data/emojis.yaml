@@ -1,0 +1,24 @@
+# Emoji Configuration
+# Customize the emojis used throughout the Automation Catalog
+# Simply change the emoji value to use a different icon
+
+emojis:
+  # Dashboard & Stats
+  automation: "🤖"
+  timeSaved: "🕒"
+  money: "💵"
+  chart: "📊"
+
+  # API Keys & Credentials
+  key: "🔑"
+  warning: "⚠️"
+  calendar: "📅"
+  checkmark: "✅"
+
+  # Automation Details
+  link: "🔗"
+  computer: "💻"
+  schedule: "🕚"
+
+  # Calendar View
+  completed: "✓"

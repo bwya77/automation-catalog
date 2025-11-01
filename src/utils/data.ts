@@ -64,6 +64,21 @@ export interface Tag {
   color: string;
 }
 
+export interface Emojis {
+  automation: string;
+  timeSaved: string;
+  money: string;
+  chart: string;
+  key: string;
+  warning: string;
+  calendar: string;
+  checkmark: string;
+  link: string;
+  computer: string;
+  schedule: string;
+  completed: string;
+}
+
 function getDataPath(relativePath: string): string {
   return path.join(process.cwd(), relativePath);
 }
@@ -161,6 +176,39 @@ export function loadTags(): Tag[] {
   } catch (error) {
     console.error('Error loading tags:', error);
     return [];
+  }
+}
+
+export function loadEmojis(): Emojis {
+  const filePath = getDataPath('data/emojis.yaml');
+
+  // Default emojis if file doesn't exist
+  const defaults: Emojis = {
+    automation: '🤖',
+    timeSaved: '🕒',
+    money: '💰',
+    chart: '📊',
+    key: '🔑',
+    warning: '⚠️',
+    calendar: '📅',
+    checkmark: '✅',
+    link: '🔗',
+    computer: '💻',
+    schedule: '⏰',
+    completed: '✓',
+  };
+
+  if (!fs.existsSync(filePath)) {
+    return defaults;
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const data = yaml.load(content) as { emojis: Emojis };
+    return { ...defaults, ...data.emojis };
+  } catch (error) {
+    console.error('Error loading emojis:', error);
+    return defaults;
   }
 }
 

@@ -3,7 +3,10 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import StatsCard from '../components/StatsCard.astro';
 import AutomationCard from '../components/AutomationCard.astro';
 import TimeSeriesChart from '../components/TimeSeriesChart';
-import { loadAutomations, getExpiringApiKeys, loadEngineers } from '../utils/data';
+import { loadAutomations, getExpiringApiKeys, loadEngineers, loadEmojis } from '../utils/data';
+
+// Load emoji configuration
+const emojis = loadEmojis();
 
 // Load all data (client-side filtering will be applied)
 const allAutomations = loadAutomations();
@@ -127,7 +130,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <StatsCard
         title="Total Automations"
         value={allAutomations.length}
-        icon="🤖"
+        icon={emojis.automation}
         subtitle={`Across ${new Set(allAutomations.map(a => a.department)).size} departments`}
         growth={growthAutomations}
       />
@@ -135,7 +138,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <StatsCard
         title="Monthly Time Saved"
         value={`${totalTimeSaved}h`}
-        icon="⏱️"
+        icon={emojis.timeSaved}
         subtitle="Across all automations"
         growth={growthTimeSaved}
         growthUnit="h"
@@ -144,7 +147,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <StatsCard
         title="Annual Value"
         value={formatCurrency(totalAnnualValue)}
-        icon="💰"
+        icon={emojis.money}
         subtitle="Total business value"
         growth={growthAnnualValue}
         growthUnit="$"
@@ -153,7 +156,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       <StatsCard
         title="Keys Expiring Soon"
         value={expiringKeys.length}
-        icon="🔑"
+        icon={emojis.key}
         subtitle="Within 90 days"
         growth={growthExpiringKeys}
       />
@@ -200,7 +203,7 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
         <div class="card p-6">
           {expiringKeys.length === 0 ? (
             <p class="text-gray-500 dark:text-gray-400 text-center py-8">
-              ✅ No API keys expiring in the next 90 days
+              {emojis.checkmark} No API keys expiring in the next 90 days
             </p>
           ) : (
             <div class="space-y-4">

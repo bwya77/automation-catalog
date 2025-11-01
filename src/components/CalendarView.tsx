@@ -32,6 +32,7 @@ interface CalendarViewProps {
 }
 
 type ViewMode = 'calendar' | 'list';
+type ItemFilter = 'all' | 'keys' | 'projects';
 
 interface CompletedAutomation {
   id: string;
@@ -44,6 +45,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [customerFilter, setCustomerFilter] = useState<string>('all');
+  const [itemFilter, setItemFilter] = useState<ItemFilter>('all');
 
   // Read customer filter from URL on mount
   useEffect(() => {
@@ -121,6 +123,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
 
   // Get keys for a specific day
   const getKeysForDay = (date: Date) => {
+    if (itemFilter === 'projects') return [];
     return processedKeys.filter(key => {
       const expDate = key.expiration;
       return (
@@ -133,6 +136,7 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
 
   // Get completed automations for a specific day
   const getCompletedAutomationsForDay = (date: Date) => {
+    if (itemFilter === 'keys') return [];
     return completedAutomations.filter(automation => {
       const closedDate = automation.closed;
       return (
@@ -210,47 +214,108 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
     return acc;
   }, {} as Record<string, ApiKeyExpiration[]>);
 
-  const sortedMonths = Object.entries(keysByMonth).sort(([, keysA], [, keysB]) => {
-    return keysA[0].expiration.getTime() - keysB[0].expiration.getTime();
-  });
+  // Group completed automations by month
+  const completedByMonth = completedAutomations.reduce((acc, automation) => {
+    const monthKey = automation.closed.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    if (!acc[monthKey]) {
+      acc[monthKey] = [];
+    }
+    acc[monthKey].push(automation);
+    return acc;
+  }, {} as Record<string, CompletedAutomation[]>);
+
+  // Combine all months from both keys and completed automations
+  const allMonths = new Set([...Object.keys(keysByMonth), ...Object.keys(completedByMonth)]);
+
+  const sortedMonths = Array.from(allMonths).map(month => {
+    const keys = keysByMonth[month] || [];
+    const completed = completedByMonth[month] || [];
+
+    // Get the first date from either list to sort by
+    const firstDate = keys.length > 0
+      ? keys[0].expiration
+      : completed.length > 0
+      ? completed[0].closed
+      : new Date();
+
+    return { month, keys, completed, firstDate };
+  }).sort((a, b) => a.firstDate.getTime() - b.firstDate.getTime());
 
   return (
     <div className="space-y-6">
       {/* View Toggle */}
       <div className="card p-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">View Options</h2>
-          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('calendar')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'calendar'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                Calendar
-              </div>
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-                List
-              </div>
-            </button>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+            {/* Item Filter */}
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-full sm:w-auto">
+              <button
+                onClick={() => setItemFilter('all')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex-1 sm:flex-initial ${
+                  itemFilter === 'all'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setItemFilter('keys')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex-1 sm:flex-initial ${
+                  itemFilter === 'keys'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                Keys
+              </button>
+              <button
+                onClick={() => setItemFilter('projects')}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex-1 sm:flex-initial ${
+                  itemFilter === 'projects'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                Projects
+              </button>
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-900 rounded-lg p-1 w-full sm:w-auto">
+              <button
+                onClick={() => setViewMode('calendar')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1 sm:flex-initial ${
+                  viewMode === 'calendar'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Calendar
+                </div>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex-1 sm:flex-initial ${
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-sm'
+                    : 'bg-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  List
+                </div>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -506,34 +571,38 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Color Legend</h3>
         <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">Events shown on the calendar:</p>
         <div className="space-y-3">
-          <div>
-            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">🔑 Expiring Keys (by urgency):</p>
-            <div className="flex flex-wrap gap-4 ml-4">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-3 rounded bg-red-600" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Expired (overdue)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-3 rounded bg-red-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Urgent (≤30 days)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-3 rounded bg-yellow-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Warning (31-90 days)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-3 rounded bg-green-500" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">Good (&gt;90 days)</span>
+          {itemFilter !== 'projects' && (
+            <div>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">🔑 Expiring Keys (by urgency):</p>
+              <div className="flex flex-wrap gap-4 ml-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-3 rounded bg-red-600" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Expired (overdue)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-3 rounded bg-red-500" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Urgent (≤30 days)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-3 rounded bg-yellow-500" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Warning (31-90 days)</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-3 rounded bg-green-500" />
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Good (&gt;90 days)</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">✓ Automations:</p>
-            <div className="flex items-center gap-2 ml-4">
-              <div className="w-4 h-3 rounded bg-blue-500" />
-              <span className="text-sm text-gray-600 dark:text-gray-400">Completed on this date</span>
+          )}
+          {itemFilter !== 'keys' && (
+            <div>
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">✓ Automations:</p>
+              <div className="flex items-center gap-2 ml-4">
+                <div className="w-4 h-3 rounded bg-blue-500" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">Completed on this date</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
       )}
@@ -541,14 +610,21 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
       {/* List View */}
       {viewMode === 'list' && (
         <div className="space-y-6">
-          {sortedMonths.map(([month, keys]) => {
+          {sortedMonths.map(({ month, keys, completed }) => {
             const hasUrgent = keys.some(k => k.isUrgent || k.isExpired);
+            const filteredKeys = itemFilter === 'projects' ? [] : keys;
+            const filteredCompleted = itemFilter === 'keys' ? [] : completed;
+
+            // Skip empty months based on filter
+            if (filteredKeys.length === 0 && filteredCompleted.length === 0) {
+              return null;
+            }
 
             return (
               <div key={month} className="card p-5">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">{month}</h2>
-                  {hasUrgent && (
+                  {hasUrgent && itemFilter !== 'projects' && (
                     <span className="badge bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 text-sm px-3 py-1">
                       ⚠️ Urgent
                     </span>
@@ -556,7 +632,8 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
                 </div>
 
                 <div className="space-y-3">
-                  {keys.map((key, index) => {
+                  {/* API Keys */}
+                  {filteredKeys.map((key, index) => {
                     const borderClass = key.isExpired
                       ? 'border-red-700'
                       : key.isUrgent
@@ -574,10 +651,11 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
                       : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300';
 
                     return (
-                      <div key={index} className={`pl-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-r-lg border-l-4 ${borderClass}`}>
+                      <div key={`key-${index}`} className={`pl-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-r-lg border-l-4 ${borderClass}`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
+                              <span className="text-sm">🔑</span>
                               <h3 className="font-bold text-gray-900 dark:text-gray-100">{key.key}</h3>
                               <span className={`badge text-xs px-2 py-0.5 ${badgeClass}`}>
                                 {key.daysUntil < 0 ? 'EXPIRED' : `${key.daysUntil} days`}
@@ -607,6 +685,34 @@ export default function CalendarView({ apiKeys, automations }: CalendarViewProps
                       </div>
                     );
                   })}
+
+                  {/* Completed Automations */}
+                  {filteredCompleted.map((automation, index) => (
+                    <div key={`completed-${index}`} className="pl-4 py-3 bg-gray-50 dark:bg-gray-700 rounded-r-lg border-l-4 border-blue-500">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm">✓</span>
+                            <h3 className="font-bold text-gray-900 dark:text-gray-100">{automation.name}</h3>
+                            <span className="badge text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                              Completed
+                            </span>
+                          </div>
+                          <a
+                            href={`/automations/${automation.id}`}
+                            className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                          >
+                            View automation →
+                          </a>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {formatDate(automation.closed)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             );

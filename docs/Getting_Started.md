@@ -206,6 +206,49 @@ Every time you push changes to the `main` branch:
 
 **No manual deployment needed!** Just commit and push to `main`.
 
+### 7.3 Customizing Emojis
+
+The Automation Catalog uses a centralized emoji configuration system that allows you to customize all emojis displayed throughout the site.
+
+#### Emoji Configuration File
+
+Emojis are defined in `data/emojis.yaml`. If this file doesn't exist, the application will use sensible defaults.
+
+**Available emoji keys**:
+
+```yaml
+emojis:
+  automation: "🤖"      # Used for automation icons
+  timeSaved: "🕒"       # Time saved metrics
+  money: "💰"           # Financial value indicators
+  chart: "📊"           # Data visualization icons
+  key: "🔑"             # API keys and credentials
+  warning: "⚠️"         # Warning indicators
+  calendar: "📅"        # Calendar and scheduling
+  checkmark: "✅"       # Success indicators
+  link: "🔗"            # External links
+  computer: "💻"        # System and environment
+  schedule: "⏰"        # Schedule and timing
+  completed: "✓"        # Completion status
+```
+
+#### How to Customize
+
+1. Create or edit `data/emojis.yaml` in your repository
+2. Override any emoji keys you want to change:
+
+```yaml
+emojis:
+  timeSaved: "⏱️"      # Change clock emoji
+  money: "💵"          # Change money emoji to dollar bills
+  checkmark: "✔️"      # Use a different checkmark style
+```
+
+3. Commit and push your changes
+4. The emojis will update automatically on your next deployment
+
+**Note**: You only need to include the emojis you want to change. Any keys not specified will use the default values.
+
 ---
 
 ## Troubleshooting

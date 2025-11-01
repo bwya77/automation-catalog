@@ -1,10 +1,13 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { loadAutomations, loadEngineers, loadTags } from '../../utils/data';
+import { loadAutomations, loadEngineers, loadTags, loadEmojis } from '../../utils/data';
 import { marked } from 'marked';
 import MermaidRenderer from '../../components/MermaidRenderer';
 import fs from 'fs';
 import path from 'path';
+
+// Load emoji configuration
+const emojis = loadEmojis();
 
 export async function getStaticPaths() {
   const automations = loadAutomations();
@@ -279,7 +282,7 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
                   class="block p-3 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
                 >
                   <div class="flex items-center space-x-2">
-                    <span class="text-xl">🔗</span>
+                    <span class="text-xl">{emojis.link}</span>
                     <span class="font-medium text-gray-900 dark:text-gray-100">{link.name}</span>
                   </div>
                 </a>
@@ -294,7 +297,7 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
           <div class="flex flex-wrap gap-2">
             {automation.systems.map(system => (
               <div class="flex items-center space-x-2 bg-gray-50 dark:bg-gray-700 px-3 py-2 rounded-lg">
-                <span class="text-lg">💻</span>
+                <span class="text-lg">{emojis.computer}</span>
                 <span class="text-sm font-medium text-gray-900 dark:text-gray-100">{system}</span>
               </div>
             ))}
@@ -309,7 +312,7 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
               {automation.schedules.map(schedule => (
                 <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                   <div class="flex items-start space-x-2">
-                    <span class="text-lg mt-0.5">⏰</span>
+                    <span class="text-lg mt-0.5">{emojis.schedule}</span>
                     <div class="flex-1">
                       <p class="font-medium text-gray-900 dark:text-gray-100">{schedule.frequency}</p>
                       {schedule.time && (
