@@ -20,7 +20,9 @@ const engineer = engineers.find(e => e.id === automation.author);
 
 // Load tags to get colors
 const allTags = loadTags();
-const tagColorMap = new Map(allTags.map(t => [t.name.toLowerCase(), t.color]));
+// Normalize tag names: lowercase and replace hyphens with spaces for matching
+const normalizeTagName = (name: string) => name.toLowerCase().replace(/-/g, ' ');
+const tagColorMap = new Map(allTags.map(t => [normalizeTagName(t.name), t.color]));
 
 // Helper to convert hex to RGB for transparency
 const hexToRgb = (hex: string) => {
@@ -146,7 +148,7 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
       <!-- Tags -->
       <div class="flex flex-wrap gap-2 mb-6">
         {automation.tags.map(tag => {
-          const color = tagColorMap.get(tag.toLowerCase());
+          const color = tagColorMap.get(normalizeTagName(tag));
           const rgb = color ? hexToRgb(color) : null;
           const bgColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : undefined;
           const textColor = color || undefined;
@@ -155,7 +157,14 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
           return color && rgb ? (
             <span
               class="tag-colored text-sm font-medium px-3 py-1.5 rounded border-2 transition-colors"
-              style={`background: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2); color: ${color}; border-color: ${color};`}
+              style={`
+                --tag-color: ${color};
+                --tag-bg-light: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15);
+                --tag-bg-dark: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25);
+                background: var(--tag-bg-light);
+                color: #000000;
+                border-color: ${color};
+              `}
             >
               {tag}
             </span>
