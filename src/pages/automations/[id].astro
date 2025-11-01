@@ -152,10 +152,10 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
           const textColor = color || undefined;
           const borderColor = color || undefined;
 
-          return color ? (
+          return color && rgb ? (
             <span
-              class="badge text-sm font-medium px-3 py-1.5 rounded"
-              style={`background-color: ${bgColor}; color: ${textColor}; border: 1px solid ${borderColor};`}
+              class="tag-colored text-sm font-medium px-3 py-1.5 rounded border-2 transition-colors"
+              style={`background: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2); color: ${color}; border-color: ${color};`}
             >
               {tag}
             </span>

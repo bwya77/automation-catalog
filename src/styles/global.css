@@ -24,4 +24,15 @@
   .badge {
     @apply inline-block px-3 py-1 text-xs font-semibold rounded-full;
   }
+
+  /* Tag colors with better dark mode visibility */
+  .tag-colored {
+    position: relative;
+  }
+
+  .dark .tag-colored {
+    /* Increase background opacity in dark mode */
+    background-blend-mode: screen;
+    filter: brightness(1.3) saturate(1.2);
+  }
 }

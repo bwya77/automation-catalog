@@ -95,14 +95,15 @@ const getStatusLabel = (status: string) => {
     {automation.tags.slice(0, 3).map(tag => {
       const color = tagColorMap.get(tag.toLowerCase());
       const rgb = color ? hexToRgb(color) : null;
-      const bgColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : undefined;
-      const textColor = color || undefined;
-      const borderColor = color || undefined;
 
-      return color ? (
+      return color && rgb ? (
         <span
-          class="badge text-xs font-medium px-2.5 py-1 rounded"
-          style={`background-color: ${bgColor}; color: ${textColor}; border: 1px solid ${borderColor};`}
+          class="tag-colored text-xs font-medium px-2.5 py-1 rounded border-2 transition-colors"
+          style={`
+            background: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2);
+            color: ${color};
+            border-color: ${color};
+          `}
         >
           {tag}
         </span>
