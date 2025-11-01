@@ -1,11 +1,34 @@
 ---
 import type { Automation } from '../utils/data';
+import { loadTags } from '../utils/data';
 
 interface Props {
   automation: Automation;
 }
 
 const { automation } = Astro.props;
+
+// Load tags to get colors
+const allTags = loadTags();
+const tagColorMap = new Map(allTags.map(t => [t.name.toLowerCase(), t.color]));
+
+// Helper to convert hex to RGB for transparency
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
+
+// Helper to get contrasting text color
+const getTextColor = (bgColor: string) => {
+  const rgb = hexToRgb(bgColor);
+  if (!rgb) return '#ffffff';
+  const brightness = (rgb.r * 299 + rgb.g * 587 + rgb.b * 114) / 1000;
+  return brightness > 128 ? '#000000' : '#ffffff';
+};
 
 const formatDate = (dateStr: string) => {
   return new Date(dateStr).toLocaleDateString('en-US', {
@@ -69,11 +92,26 @@ const getStatusLabel = (status: string) => {
   </p>
 
   <div class="flex flex-wrap gap-2 mb-4">
-    {automation.tags.slice(0, 3).map(tag => (
-      <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-        {tag}
-      </span>
-    ))}
+    {automation.tags.slice(0, 3).map(tag => {
+      const color = tagColorMap.get(tag.toLowerCase());
+      const rgb = color ? hexToRgb(color) : null;
+      const bgColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : undefined;
+      const textColor = color || undefined;
+      const borderColor = color || undefined;
+
+      return color ? (
+        <span
+          class="badge text-xs font-medium px-2.5 py-1 rounded"
+          style={`background-color: ${bgColor}; color: ${textColor}; border: 1px solid ${borderColor};`}
+        >
+          {tag}
+        </span>
+      ) : (
+        <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
+          {tag}
+        </span>
+      );
+    })}
     {automation.tags.length > 3 && (
       <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400">
         +{automation.tags.length - 3} more

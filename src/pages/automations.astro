@@ -1,10 +1,24 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { loadAutomations, loadEngineers } from '../utils/data';
+import { loadAutomations, loadEngineers, loadTags } from '../utils/data';
 
 // Load all automations (client-side filtering will handle customer filter)
 const automations = loadAutomations();
 const engineers = loadEngineers();
+
+// Load tags to get colors
+const tagsWithColors = loadTags();
+const tagColorMap = new Map(tagsWithColors.map(t => [t.name.toLowerCase(), t.color]));
+
+// Helper to convert hex to RGB for transparency
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
 
 // Get unique departments, tags, authors, and statuses for filters
 const departments = Array.from(new Set(automations.map(a => a.department))).sort();
@@ -212,11 +226,26 @@ const statuses = ['live', 'development', 'backlog'] as const;
             </p>
 
             <div class="flex flex-wrap gap-1.5 mb-4">
-              {automation.tags.slice(0, 3).map(tag => (
-                <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2.5 py-1">
-                  {tag}
-                </span>
-              ))}
+              {automation.tags.slice(0, 3).map(tag => {
+                const color = tagColorMap.get(tag.toLowerCase());
+                const rgb = color ? hexToRgb(color) : null;
+                const bgColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : undefined;
+                const textColor = color || undefined;
+                const borderColor = color || undefined;
+
+                return color ? (
+                  <span
+                    class="text-xs font-medium px-2.5 py-1 rounded"
+                    style={`background-color: ${bgColor}; color: ${textColor}; border: 1px solid ${borderColor};`}
+                  >
+                    {tag}
+                  </span>
+                ) : (
+                  <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2.5 py-1">
+                    {tag}
+                  </span>
+                );
+              })}
               {automation.tags.length > 3 && (
                 <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs px-2.5 py-1">
                   +{automation.tags.length - 3}

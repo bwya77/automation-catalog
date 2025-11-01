@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { loadAutomations, loadEngineers } from '../../utils/data';
+import { loadAutomations, loadEngineers, loadTags } from '../../utils/data';
 import { marked } from 'marked';
 import MermaidRenderer from '../../components/MermaidRenderer';
 import fs from 'fs';
@@ -17,6 +17,20 @@ export async function getStaticPaths() {
 const { automation } = Astro.props;
 const engineers = loadEngineers();
 const engineer = engineers.find(e => e.id === automation.author);
+
+// Load tags to get colors
+const allTags = loadTags();
+const tagColorMap = new Map(allTags.map(t => [t.name.toLowerCase(), t.color]));
+
+// Helper to convert hex to RGB for transparency
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
 
 // Load README if it exists and convert markdown to HTML
 let readmeContent = '';
@@ -131,11 +145,26 @@ const processedApiKeys = automation.api_keys ? automation.api_keys.map(key => {
 
       <!-- Tags -->
       <div class="flex flex-wrap gap-2 mb-6">
-        {automation.tags.map(tag => (
-          <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm">
-            {tag}
-          </span>
-        ))}
+        {automation.tags.map(tag => {
+          const color = tagColorMap.get(tag.toLowerCase());
+          const rgb = color ? hexToRgb(color) : null;
+          const bgColor = rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)` : undefined;
+          const textColor = color || undefined;
+          const borderColor = color || undefined;
+
+          return color ? (
+            <span
+              class="badge text-sm font-medium px-3 py-1.5 rounded"
+              style={`background-color: ${bgColor}; color: ${textColor}; border: 1px solid ${borderColor};`}
+            >
+              {tag}
+            </span>
+          ) : (
+            <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm">
+              {tag}
+            </span>
+          );
+        })}
       </div>
 
       <!-- Stats Grid -->
