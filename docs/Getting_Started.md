@@ -231,6 +231,7 @@ emojis:
   computer: "💻"        # System and environment
   schedule: "⏰"        # Schedule and timing
   completed: "✓"        # Completion status
+  favicon: "🤖"         # Browser tab icon (favicon with transparent background)
 ```
 
 #### How to Customize
@@ -243,6 +244,7 @@ emojis:
   timeSaved: "⏱️"      # Change clock emoji
   money: "💵"          # Change money emoji to dollar bills
   checkmark: "✔️"      # Use a different checkmark style
+  favicon: "🚀"        # Change browser tab icon to a rocket
 ```
 
 3. Commit and push your changes

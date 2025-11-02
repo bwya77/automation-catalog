@@ -77,6 +77,7 @@ export interface Emojis {
   computer: string;
   schedule: string;
   completed: string;
+  favicon: string;
 }
 
 function getDataPath(relativePath: string): string {
@@ -196,6 +197,7 @@ export function loadEmojis(): Emojis {
     computer: '💻',
     schedule: '⏰',
     completed: '✓',
+    favicon: '🤖',
   };
 
   if (!fs.existsSync(filePath)) {
@@ -218,7 +220,7 @@ export function getAutomationById(id: string): Automation | undefined {
 }
 
 export function getExpiringApiKeys(daysAhead: number = 90): Array<ApiKey & { automationId: string; automationName: string }> {
-  const automations = loadAutomations();
+  const automations = loadAutomations().filter(a => a.status === 'live');
   const expiringKeys: Array<ApiKey & { automationId: string; automationName: string }> = [];
   const now = new Date();
   const futureDate = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000);

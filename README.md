@@ -37,10 +37,16 @@ automation-catalog/
 │   │   └── README.md
 │   └── ...
 ├── data/
-│   ├── api-keys.json
 │   ├── departments.yaml
 │   ├── engineers.yaml
-│   └── tags.yaml
+│   ├── tags.yaml
+│   ├── emojis.yaml
+│   └── version.yaml
+├── docs/
+│   ├── Getting_Started.md
+│   └── Adding_Automations.md
+├── schemas/
+│   └── *.schema.json
 ├── public/
 │   └── assets/
 ├── src/
@@ -63,13 +69,15 @@ Each automation has its own folder under `/automations/` containing:
 **metadata.yaml**
 ```yaml
 name: CW Sales Order Sync
-author: Bradley Wyatt
-department: Sales
+author: bradley-wyatt  # Must match ID from data/engineers.yaml
+department: sales
+customer: "Example Customer"  # Optional: for filtering by customer
 status: live  # Options: live, development, backlog
+description: Automates synchronization of sales orders between ConnectWise and Azure
 tags:
-  - Azure
-  - ConnectWise
-  - AI
+  - azure
+  - connectwise
+  - ai
 systems:
   - ConnectWise Manage
   - Azure Functions
@@ -77,14 +85,22 @@ time_saved_hours_per_month: 120
 annual_value_usd: 18000
 created: 2024-06-01
 last_updated: 2025-10-15
+closed: 2024-06-15  # Date automation went live (used for metrics)
 links:
-  runbook: "https://ntiva.sharepoint.com/runbooks/cw-sales-order-sync"
-  sentry: "https://sentry.io/ntiva/cw-sales-order-sync"
-  repo: "https://dev.azure.com/ntiva/automation/_git/cw-sales-order-sync"
+  - name: Runbook
+    url: https://docs.example.com/runbooks/cw-sales-order-sync
+  - name: Sentry
+    url: https://sentry.io/project/cw-sales-order-sync
+  - name: Source Code
+    url: https://dev.azure.com/org/_git/cw-sales-order-sync
+schedules:
+  - frequency: Daily at 2 AM
 api_keys:
   - name: CW_API
     system: ConnectWise
     expiration: 2026-01-01
+    notes: ConnectWise API credentials
+    url: https://itglue.example.com/passwords/123
 ````
 
 **diagram.svg**
@@ -101,32 +117,41 @@ api_keys:
 
 ### 📂 Catalog Browsing
 
-* List all automations with filtering and search
+* List all automations with advanced filtering
 * Filter by:
-
+  * Customer (global filter across all pages)
   * Department
-  * Engineer
+  * Status (Live, Development, Backlog)
   * Tags (e.g., AI, Azure, M365)
   * System integration
 
 ### 📊 Analytics Dashboard
 
-* Graph showing **time saved over time**
-* Leaderboard: total time saved per engineer
-* Breakdown of automation count per department
+* **Time series chart** showing cumulative time saved and value over time
+* **Total metrics** for LIVE automations only:
+  * Total automations count
+  * Monthly time saved
+  * Annual value
+  * API keys expiring soon
+* **Department breakdown** with time saved and value per department
+* **Engineer leaderboard** showing automations per engineer with status badges
 
 ### 📅 Calendar View
 
-* API key and permission expirations
-* Automations nearing review/refresh dates
+* API key expirations with visual urgency indicators
+* Filter by customer to see customer-specific expirations
+* Color-coded by urgency:
+  * 🔴 Red: Expiring in ≤30 days
+  * 🟡 Yellow: Expiring in 31-90 days
 
 ### 🧷 Quick Links
 
-Each automation page includes links to:
+Each automation page includes customizable links such as:
 
-* Runbook (SharePoint/Confluence)
-* Monitoring (Sentry)
-* Source repository (Azure DevOps or GitLab)
+* Runbook documentation
+* Monitoring dashboards (Sentry, Application Insights)
+* Source repository (Azure DevOps, GitLab, GitHub)
+* IT Glue password manager links for API keys
 
 ---
 
@@ -137,9 +162,10 @@ Each automation page includes links to:
 | Static Site Generator | [Astro](https://astro.build)              |
 | Styling               | TailwindCSS                               |
 | Charts                | Recharts                                  |
-| Calendar              | FullCalendar.js                           |
+| Calendar              | Custom React Component                    |
+| Diagrams              | Mermaid.js                                |
 | Hosting               | Azure Static Web Apps (via GitHub Actions) |
-| Data Format           | YAML + JSON                               |
+| Data Format           | YAML                                      |
 | Version Control       | GitHub                                    |
 
 ---
@@ -220,7 +246,7 @@ Then open: `http://localhost:4321`
 
 ## 📘 Adding New Automations
 
-**Want to add a new automation to the catalog?** See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the complete guide!
+**Want to add a new automation to the catalog?** See **[docs/Adding_Automations.md](docs/Adding_Automations.md)** for the complete guide!
 
 **Quick start:**
 1. Create folder: `automations/your-automation-name/`
@@ -228,13 +254,20 @@ Then open: `http://localhost:4321`
 3. Add `diagram.svg` from draw.io
 4. Commit and push - the dashboard updates automatically! 🎉
 
-**All metrics auto-update:**
-- ✅ Total automation count
-- ✅ Time saved calculations
-- ✅ Time saved trend chart (based on creation dates)
-- ✅ Annual value totals
-- ✅ Department breakdowns
-- ✅ Expiring keys calendar
+**All metrics auto-update (only LIVE automations counted):**
+- ✅ Total automation count (LIVE only)
+- ✅ Time saved calculations (LIVE only)
+- ✅ Time saved trend chart (based on closed dates)
+- ✅ Annual value totals (LIVE only)
+- ✅ Department breakdowns (LIVE only)
+- ✅ Expiring keys calendar (LIVE automations only)
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed instructions, templates, and best practices.
+**Additional Features:**
+- 🔍 Filter by customer across all views
+- 📊 Dark mode support
+- 📅 Calendar view for API key expirations
+- 🎨 Customizable emojis via `data/emojis.yaml`
+- ✅ YAML schema validation in VSCode
+
+See [docs/Adding_Automations.md](docs/Adding_Automations.md) for detailed instructions, templates, and best practices.
 

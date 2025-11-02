@@ -55,6 +55,10 @@
         "completed": {
           "type": "string",
           "description": "Emoji for completion status"
+        },
+        "favicon": {
+          "type": "string",
+          "description": "Emoji for browser tab icon (favicon)"
         }
       }
     }

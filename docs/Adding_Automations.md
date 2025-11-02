@@ -63,7 +63,8 @@ Copy this template and fill in your automation's details:
 ```yaml
 name: Your Automation Name
 author: your-engineer-id  # Must match an ID from data/engineers.yaml
-department: it  # Options: sales, it, hr, finance, operations
+department: it  # Options: sales, it, hr, finance, operations, executive
+customer: "Example Customer"  # Optional: enables customer filtering
 status: live  # Options: live, development, backlog
 description: A brief description of what this automation does (1-2 sentences)
 
@@ -82,23 +83,30 @@ annual_value_usd: 12000
 
 created: 2024-11-15
 last_updated: 2025-10-29
+closed: 2024-11-20  # Optional: date automation went live (used for metrics)
 
 links:
-  runbook: https://docs.example.com/runbooks/your-automation
-  sentry: https://sentry.io/your-project/your-automation
-  repo: https://dev.azure.com/org/_git/your-automation
+  - name: Runbook
+    url: https://docs.example.com/runbooks/your-automation
+  - name: Sentry
+    url: https://sentry.io/your-project/your-automation
+  - name: Source Code
+    url: https://dev.azure.com/org/_git/your-automation
+
+schedules:
+  - frequency: Daily at 2 AM  # Optional: describe when automation runs
 
 api_keys:
   - name: AZURE_CLIENT_SECRET
     system: Azure AD
     expiration: 2026-06-01
     notes: App registration for Graph API access
-    link: https://itglue.example.com/passwords/12345  # Optional: Link to credential in IT Glue or other password manager
+    url: https://itglue.example.com/passwords/12345  # Optional: Link to credential in IT Glue or other password manager
   - name: SHAREPOINT_SECRET
     system: SharePoint
     expiration: 2025-12-15
     notes: Client credentials for SharePoint access
-    link: https://itglue.example.com/passwords/67890
+    url: https://itglue.example.com/passwords/67890
 ```
 
 ---
@@ -261,7 +269,7 @@ git push origin main
 |-------|------|-------------|---------|
 | `name` | String | Display name of automation | `"Azure VM Backup"` |
 | `author` | String | Engineer ID from `engineers.yaml` | `"bradley-wyatt"` |
-| `department` | String | Department ID | `"it"` (sales, it, hr, finance, operations) |
+| `department` | String | Department ID | `"it"` (sales, it, hr, finance, operations, executive) |
 | `status` | String | Current status | `"live"` (live, development, backlog) |
 | `description` | String | Brief description (1-2 sentences) | `"Automated backup of Azure VMs..."` |
 | `tags` | Array | Technology tags | `["azure", "powershell"]` |
@@ -275,9 +283,10 @@ git push origin main
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `links.runbook` | URL | Link to runbook documentation |
-| `links.sentry` | URL | Link to Sentry monitoring |
-| `links.repo` | URL | Link to source code repository |
+| `customer` | String | Customer name (enables filtering by customer across all views) |
+| `closed` | Date | Date when automation went live (YYYY-MM-DD) - used for time series chart |
+| `links` | Array | Array of link objects with `name` and `url` fields |
+| `schedules` | Array | Schedule information (e.g., `["Daily at 2 AM", "On Form Submission"]`) |
 | `api_keys` | Array | API keys and credentials (see below) |
 
 ### API Keys Structure
@@ -288,16 +297,17 @@ api_keys:
     system: System Name          # Which system this key is for
     expiration: 2026-06-01      # Expiration date (YYYY-MM-DD) or null
     notes: Optional description  # Additional context
-    link: https://itglue.example.com/passwords/12345  # Optional: Link to credential manager (IT Glue, etc.)
+    url: https://itglue.example.com/passwords/12345  # Optional: Link to credential manager (IT Glue, etc.)
 ```
 
 **Tips for API Keys:**
 - Use `null` for `expiration` if the key doesn't expire (e.g., Managed Identity)
 - Keys expiring in ≤30 days show in RED on dashboard
 - Keys expiring in 31-90 days show in YELLOW
-- Add `link` field to provide direct access to the credential in IT Glue or other password managers
+- Add `url` field to provide direct access to the credential in IT Glue or other password managers
 - The link opens in a new tab and displays with a key icon on the automation detail page
 - All expirations appear in the calendar view
+- Only API keys from LIVE automations appear in dashboard widgets and calendar
 
 ---
 
@@ -330,25 +340,28 @@ tags:
 
 When you add a new automation, these metrics update automatically:
 
-### 📊 Stats Cards
-- **Total Automations**: Counts all automation folders
-- **Monthly Time Saved**: Sums all `time_saved_hours_per_month` values
-- **Annual Value**: Sums all `annual_value_usd` values
-- **Keys Expiring Soon**: Counts API keys expiring in next 90 days
+### 📊 Stats Cards (LIVE Automations Only)
+- **Total Automations**: Counts only automations with `status: live`
+- **Monthly Time Saved**: Sums `time_saved_hours_per_month` for LIVE automations
+- **Annual Value**: Sums `annual_value_usd` for LIVE automations
+- **Keys Expiring Soon**: Counts API keys from LIVE automations expiring in next 90 days
 
 ### 📈 Time Saved Trend Chart
-- Automatically groups automations by creation month
-- Shows cumulative time saved over time
-- Updates when you add/modify automations
+- Shows cumulative time saved based on `closed` date (when automation went live)
+- Only includes LIVE automations with a `closed` date
+- Updates automatically when you add/modify automations
+- Filter by customer to see customer-specific trends
 
-### 🗓️ Calendar View
-- Automatically pulls all `api_keys` with expiration dates
+### 🗓️ Calendar View (LIVE Automations Only)
+- Automatically pulls `api_keys` with expiration dates from LIVE automations
 - Groups by month
 - Color-codes by urgency (red = ≤30 days, yellow = 31-90 days)
+- Filter by customer to see customer-specific expirations
 
 ### 👥 Department Breakdown
-- Counts automations per department
-- Calculates time saved per department
+- Counts LIVE automations per department
+- Calculates time saved per department (LIVE only)
+- Shows monthly value per department (LIVE only)
 - Updates when you change `department` field
 
 ---
@@ -402,14 +415,17 @@ Before committing, ensure:
 - [ ] Folder name is lowercase with hyphens
 - [ ] `metadata.yaml` has all required fields
 - [ ] `author` ID exists in `data/engineers.yaml`
-- [ ] `department` is valid (sales, it, hr, finance, operations)
+- [ ] `department` is valid (sales, it, hr, finance, operations, executive)
 - [ ] `status` is valid (live, development, backlog)
-- [ ] All dates are in `YYYY-MM-DD` format
+- [ ] All dates are in `YYYY-MM-DD` format (including `closed` if present)
+- [ ] `links` uses array structure with `name` and `url` fields
 - [ ] `diagram.svg` exists and displays correctly
-- [ ] All URLs in `links` are valid and accessible
+- [ ] All URLs in `links` and `api_keys` are valid and accessible
 - [ ] API key expirations are accurate
+- [ ] API keys use `url` field (not `link`) for credential manager links
 - [ ] `time_saved_hours_per_month` is realistic
 - [ ] `annual_value_usd` is calculated correctly
+- [ ] `closed` date is set if automation is LIVE (required for metrics)
 
 ---
 

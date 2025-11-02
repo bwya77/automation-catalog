@@ -22,3 +22,6 @@ emojis:
 
   # Calendar View
   completed: "✓"
+
+  # Browser Tab
+  favicon: "👉"

@@ -25,18 +25,13 @@ const now = new Date();
 const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
+// Growth calculations based on live automations that went live this month
 const automationsThisMonth = automations.filter(a => {
   const closedDate = new Date(a.closed!);
   return closedDate >= currentMonthStart && closedDate <= currentMonthEnd;
 });
 
-// Growth in total count includes all automations (regardless of status)
-const allAutomationsThisMonth = allAutomations.filter(a => {
-  const createdDate = new Date(a.created);
-  return createdDate >= currentMonthStart && createdDate <= currentMonthEnd;
-});
-
-const growthAutomations = allAutomationsThisMonth.length;
+const growthAutomations = automationsThisMonth.length;
 const growthTimeSaved = automationsThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
 const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual_value_usd, 0);
 
@@ -129,9 +124,9 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <StatsCard
         title="Total Automations"
-        value={allAutomations.length}
+        value={automations.length}
         icon={emojis.automation}
-        subtitle={`Across ${new Set(allAutomations.map(a => a.department)).size} departments`}
+        subtitle={`Across ${new Set(automations.map(a => a.department)).size} departments`}
         growth={growthAutomations}
       />
 
@@ -363,12 +358,13 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       const params = new URLSearchParams(window.location.search);
       const customerFilter = params.get('customer');
 
-      // Determine which automations to use based on filter
+      // Determine which automations to use based on filter (only LIVE automations)
       const isFiltered = customerFilter && customerFilter !== 'all';
+      const allLiveAutomations = allAutomations.filter(a => a.status === 'live' && a.closed);
       const filteredAutomations = isFiltered
-        ? allAutomations.filter(a => a.customer && a.customer.toLowerCase() === customerFilter.toLowerCase())
-        : allAutomations;
-      const filteredLiveAutomations = filteredAutomations.filter(a => a.status === 'live' && a.closed);
+        ? allLiveAutomations.filter(a => a.customer && a.customer.toLowerCase() === customerFilter.toLowerCase())
+        : allLiveAutomations;
+      const filteredLiveAutomations = filteredAutomations;
 
       // If no filtering, reset all widgets to show all data
       if (!isFiltered) {
@@ -443,17 +439,12 @@ const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
       const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-      const automationsThisMonth = filteredLiveAutomations.filter(a => {
+      const automationsThisMonth = filteredAutomations.filter(a => {
         const closedDate = new Date(a.closed);
         return closedDate >= currentMonthStart && closedDate <= currentMonthEnd;
       });
 
-      const allAutomationsThisMonth = filteredAutomations.filter(a => {
-        const createdDate = new Date(a.created);
-        return createdDate >= currentMonthStart && createdDate <= currentMonthEnd;
-      });
-
-      const growthAutomations = allAutomationsThisMonth.length;
+      const growthAutomations = automationsThisMonth.length;
       const growthTimeSaved = automationsThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
       const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual_value_usd, 0);
 
