@@ -1,0 +1,21 @@
+engineers:
+  - id: bradley-wyatt
+    name: Bradley Wyatt
+    role: DevOps Automation Engineer
+    avatar: /assets/avatars/brad.png
+    email: bradley.wyatt@example.com
+  - id: frank-wright
+    name: Frank Wright
+    role: DevOps Automation Engineer
+    avatar: /assets/avatars/frank-wright.png
+    email: frank.wright@example.com
+  - id: margaret-potter
+    name: Margaret Potter
+    role: DevOps Automation Engineer
+    avatar: /assets/avatars/margaret-potter.png
+    email: margaret.potter@example.com
+  - id: derek-lee
+    name: Derek Lee
+    role: Jr. Developer
+    avatar: /assets/avatars/derek-lee.png
+    email: d.lee@example.com

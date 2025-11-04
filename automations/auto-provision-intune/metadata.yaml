@@ -1,0 +1,42 @@
+name: Auto Provision Intune
+author: margaret-potter
+department: finance
+customer: "internal"
+status: live
+description: Stands up new Intune environments for clients automatically upon contract signing in ConnectWise Manage.
+tags:
+  - intune
+  - azure
+  - powershell
+  - azure-runbooks
+  - autotask
+systems:
+  - Intune
+  - Sentry
+  - Azure
+  - Autotask
+time_saved_hours_per_month: 6.6
+annual_value_usd: 3580
+created: 2025-06-10
+last_updated: 2025-09-30
+closed: 2025-10-15
+links:
+  - name: Runbook
+    url: https://portal.azure.com/
+  - name: Sentry
+    url: https://sentry.io/issues/?project=450872842045616
+  - name: Source Code
+    url: hhttps://gitlab.com/
+schedules:
+  - frequency: On demand
+api_keys:
+  - name: Intune_Provision
+    system: Intune
+    expiration: 2026-11-29
+    notes: API member for Intune
+    url: https://portal.azure.com/
+  - name: Autotask_Tickeets
+    system: Autotask
+    expiration: 2026-12-29
+    notes: API member for Autotask
+    url: https://portal.autotask.com/

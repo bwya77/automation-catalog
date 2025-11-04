@@ -1,0 +1,46 @@
+name: Microsoft 365 License True-Up
+author: bradley-wyatt
+department: it
+customer: "internal"
+status: live
+description: Automate the process of identifying Microsoft 365 users who require license adjustments based on their current usage. This automation checks for users with inactive accounts, those who have left the organization, and those whose roles have changed, ensuring that licenses are allocated efficiently and cost-effectively.
+tags:
+  - azure
+  - powershell
+  - azure-runbooks
+  - hybrid-runbook-worker
+systems:
+  - Azure
+  - Microsoft 365
+time_saved_hours_per_month: 6.6
+annual_value_usd: 25200
+created: 2025-06-10
+last_updated: 2025-11-01
+closed: 2025-11-01
+links:
+  - name: Runbook
+    url: https://portal.azure.com/
+  - name: Source Code
+    url: https:/github.com/
+  - name: Hybrid Runbook Worker
+    url: https://portal.azure.com/
+  - name: Sentry 
+    url: https://sentry.io/
+schedules:
+  - frequency: Daily
+    time: 6:00 AM
+    timezone: America/Chicago
+    days:
+      - Mon
+      - Tue
+      - Wed
+      - Thu
+      - Fri
+      - Sat
+      - Sun
+api_keys:
+  - name: Microsoft_Graph_API_Key
+    system: Microsoft 365
+    expiration: 2026-12-10
+    notes: Directory.Read.All permission for Microsoft Graph API
+    url: https://portal.azure.com/

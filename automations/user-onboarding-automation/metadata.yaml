@@ -1,0 +1,42 @@
+name: User Onboarding Automation
+author: margaret-potter
+department: executive
+customer: "Wyatt Technology Solutions"
+status: live
+description: Using a Microsoft Form to collect new user information, this automation creates a ticket in ConnectWise Manage, Sets up their user account in Active Directory, and provisions their email in Microsoft 365.
+tags:
+  - ai
+  - microsoft
+  - connectwise
+  - powershell
+  - forms
+  - m365
+systems:
+  - Connectwise Manage
+  - Microsoft 365
+  - Active Directory
+time_saved_hours_per_month: 83
+annual_value_usd: 22070
+created: 2025-10-23
+last_updated: 2025-10-29
+closed: 2025-06-29
+links:
+  - name: Source Code
+    url: https://gitlab.com/
+  - name: Runbook
+    url: https://example.com/user-onboarding-automation
+  - name: Microsoft Form Template
+    url: https://forms.microsoft.com/
+schedules:
+  - frequency: On Form Submission
+api_keys:
+  - name: API_M365_Admin_Key
+    system: Microsoft 365
+    expiration: 2025-10-29
+    notes: M365 Admin API Key for user provisioning
+    url: https://example.itglue.com/42/passwords/3233
+  - name: OpenAI_SOC_API_Key
+    system:  Open AI
+    expiration: 2025-10-12
+    notes: API key for OpenAI
+    url: https://itglue.com/4239244/passwords/324345

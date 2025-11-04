@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Engineers Configuration",
+  "description": "Schema for data/engineers.yaml",
+  "type": "object",
+  "required": ["engineers"],
+  "properties": {
+    "engineers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "role", "avatar"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the engineer"
+          },
+          "name": {
+            "type": "string",
+            "description": "Full name of the engineer"
+          },
+          "role": {
+            "type": "string",
+            "description": "Job title or role"
+          },
+          "avatar": {
+            "type": "string",
+            "description": "URL or path to avatar image"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Optional email address"
+          }
+        }
+      }
+    }
+  }
+}

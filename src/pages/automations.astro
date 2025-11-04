@@ -1,0 +1,402 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadAutomations, loadEngineers, loadTags, loadEmojis } from '../utils/data';
+
+// Load all automations (client-side filtering will handle customer filter)
+const automations = loadAutomations();
+const engineers = loadEngineers();
+
+// Load emoji configuration
+const emojis = loadEmojis();
+
+// Load tags to get colors
+const tagsWithColors = loadTags();
+// Normalize tag names: lowercase and replace hyphens with spaces for matching
+const normalizeTagName = (name: string) => name.toLowerCase().replace(/-/g, ' ');
+const tagColorMap = new Map(tagsWithColors.map(t => [normalizeTagName(t.name), t.color]));
+
+// Helper to convert hex to RGB for transparency
+const hexToRgb = (hex: string) => {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+};
+
+// Get unique departments, tags, authors, and statuses for filters
+const departments = Array.from(new Set(automations.map(a => a.department))).sort();
+const allTags = Array.from(new Set(automations.flatMap(a => a.tags))).sort();
+const authors = Array.from(new Set(automations.map(a => a.author)))
+  .map(authorId => {
+    const engineer = engineers.find(e => e.id === authorId);
+    return { id: authorId, name: engineer?.name || authorId };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name));
+const statuses = ['live', 'development', 'backlog'] as const;
+---
+
+<BaseLayout title="Automations - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <!-- Header -->
+    <div class="mb-4 sm:mb-6">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">All Automations</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+        Browse and filter {automations.length} automations across all departments
+      </p>
+    </div>
+
+    <!-- Summary Widgets -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Automations</p>
+            <p id="widgetTotalAutomations" class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{automations.length}</p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.automation}</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Time Saved/Month</p>
+            <p id="widgetTimeSaved" class="mt-1 text-2xl font-bold text-primary-600 dark:text-primary-400">
+              {automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0)}h
+            </p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.timeSaved}</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Annual Value</p>
+            <p id="widgetAnnualValue" class="mt-1 text-2xl font-bold text-green-600 dark:text-green-400">
+              ${automations.reduce((sum, a) => sum + a.annual_value_usd, 0).toLocaleString()}
+            </p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.money}</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Avg Time/Auto</p>
+            <p id="widgetAvgTime" class="mt-1 text-2xl font-bold text-blue-600 dark:text-blue-400">
+              {Math.round(automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0) / automations.length)}h
+            </p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.chart}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card p-5 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Filters</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400">
+          Showing <span id="resultsCount" class="font-semibold text-primary-600 dark:text-primary-400">{automations.length}</span> automation(s)
+        </p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <!-- Search -->
+        <div>
+          <label for="search" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+            Search
+          </label>
+          <input
+            type="text"
+            id="search"
+            placeholder="Search automations..."
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+          />
+        </div>
+
+        <!-- Department Filter -->
+        <div>
+          <label for="department" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+            Department
+          </label>
+          <select
+            id="department"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+          >
+            <option value="">All Departments</option>
+            {departments.map((dept) => (
+              <option value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Tag Filter -->
+        <div>
+          <label for="tag" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+            Tag
+          </label>
+          <select
+            id="tag"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+          >
+            <option value="">All Tags</option>
+            {allTags.map((tag) => (
+              <option value={tag}>{tag}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Author Filter -->
+        <div>
+          <label for="author" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+            Developer
+          </label>
+          <select
+            id="author"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+          >
+            <option value="">All Developers</option>
+            {authors.map((author) => (
+              <option value={author.id}>{author.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div>
+          <label for="status" class="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+            Status
+          </label>
+          <select
+            id="status"
+            class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-shadow"
+          >
+            <option value="">All Statuses</option>
+            {statuses.map((status) => (
+              <option value={status} class="capitalize">{status}</option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Clear Button -->
+        <div class="flex items-end">
+          <button
+            id="clearFilters"
+            class="w-full px-4 py-2 text-sm font-medium rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 transition-colors"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Automations Grid -->
+    <div id="automationsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {automations.map((automation) => {
+        const statusColors = {
+          live: 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300',
+          development: 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300',
+          backlog: 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+        };
+        return (
+        <div
+          class="automation-item"
+          data-name={automation.name.toLowerCase()}
+          data-description={automation.description.toLowerCase()}
+          data-department={automation.department}
+          data-tags={automation.tags.join(',')}
+          data-author={automation.author}
+          data-status={automation.status}
+          data-customer={automation.customer || ''}
+        >
+          <a href={`/automations/${automation.id}`} class="card block p-5 hover:scale-[1.02] hover:shadow-lg transition-all duration-200 h-full">
+            <div class="flex justify-between items-start gap-3 mb-3">
+              <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 leading-tight">{automation.name}</h3>
+              <div class="flex flex-col gap-1.5 items-end flex-shrink-0">
+                <span class="badge bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300 capitalize text-xs px-2.5 py-1">
+                  {automation.department}
+                </span>
+                <span class={`badge ${statusColors[automation.status]} capitalize text-xs px-2.5 py-1`}>
+                  {automation.status}
+                </span>
+              </div>
+            </div>
+
+            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2 leading-relaxed">
+              {automation.description}
+            </p>
+
+            <div class="flex flex-wrap gap-1.5 mb-4">
+              {automation.tags.slice(0, 3).map(tag => {
+                const color = tagColorMap.get(normalizeTagName(tag));
+                const rgb = color ? hexToRgb(color) : null;
+
+                return color && rgb ? (
+                  <span
+                    class="tag-colored text-xs font-medium px-2.5 py-1 rounded border-2 transition-colors"
+                    style={`
+                      --tag-color: ${color};
+                      --tag-bg-light: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15);
+                      --tag-bg-dark: rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.25);
+                      background: var(--tag-bg-light);
+                      color: #000000;
+                      border-color: ${color};
+                    `}
+                  >
+                    {tag}
+                  </span>
+                ) : (
+                  <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs px-2.5 py-1">
+                    {tag}
+                  </span>
+                );
+              })}
+              {automation.tags.length > 3 && (
+                <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 text-xs px-2.5 py-1">
+                  +{automation.tags.length - 3}
+                </span>
+              )}
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-3 mt-auto border-t border-gray-200 dark:border-gray-700">
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Time Saved/Month</p>
+                <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  {automation.time_saved_hours_per_month}h
+                </p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Annual Value</p>
+                <p class="text-lg font-semibold text-green-600 dark:text-green-400">
+                  ${automation.annual_value_usd.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          </a>
+        </div>
+        );
+      })}
+    </div>
+
+    <!-- No Results Message -->
+    <div id="noResults" class="hidden text-center py-12">
+      <p class="text-gray-500 dark:text-gray-400 text-lg">No automations found matching your filters.</p>
+      <button
+        onclick="document.getElementById('clearFilters').click()"
+        class="mt-4 text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium"
+      >
+        Clear filters and try again
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // Client-side filtering
+    const searchInput = document.getElementById('search') as HTMLInputElement;
+    const departmentSelect = document.getElementById('department') as HTMLSelectElement;
+    const tagSelect = document.getElementById('tag') as HTMLSelectElement;
+    const authorSelect = document.getElementById('author') as HTMLSelectElement;
+    const statusSelect = document.getElementById('status') as HTMLSelectElement;
+    const clearButton = document.getElementById('clearFilters') as HTMLButtonElement;
+    const automationItems = document.querySelectorAll('.automation-item');
+    const resultsCount = document.getElementById('resultsCount') as HTMLSpanElement;
+    const automationsGrid = document.getElementById('automationsGrid') as HTMLDivElement;
+    const noResults = document.getElementById('noResults') as HTMLDivElement;
+
+    // Get customer filter from URL
+    const params = new URLSearchParams(window.location.search);
+    const customerFilter = params.get('customer');
+
+    function filterAutomations() {
+      const searchTerm = searchInput.value.toLowerCase();
+      const selectedDept = departmentSelect.value;
+      const selectedTag = tagSelect.value;
+      const selectedAuthor = authorSelect.value;
+      const selectedStatus = statusSelect.value;
+
+      let visibleCount = 0;
+      let totalTimeSaved = 0;
+      let totalAnnualValue = 0;
+
+      automationItems.forEach((item) => {
+        const name = item.getAttribute('data-name') || '';
+        const description = item.getAttribute('data-description') || '';
+        const department = item.getAttribute('data-department') || '';
+        const tags = item.getAttribute('data-tags') || '';
+        const author = item.getAttribute('data-author') || '';
+        const status = item.getAttribute('data-status') || '';
+        const customer = item.getAttribute('data-customer') || '';
+
+        const matchesSearch = !searchTerm || name.includes(searchTerm) || description.includes(searchTerm);
+        const matchesDept = !selectedDept || department === selectedDept;
+        const matchesTag = !selectedTag || tags.split(',').includes(selectedTag);
+        const matchesAuthor = !selectedAuthor || author === selectedAuthor;
+        const matchesStatus = !selectedStatus || status === selectedStatus;
+        const matchesCustomer = !customerFilter || customerFilter === 'all' || customer === customerFilter;
+
+        if (matchesSearch && matchesDept && matchesTag && matchesAuthor && matchesStatus && matchesCustomer) {
+          (item as HTMLElement).style.display = 'block';
+          visibleCount++;
+
+          // Get automation data for calculations
+          const automationLink = item.querySelector('a[href^="/automations/"]') as HTMLAnchorElement;
+          if (automationLink) {
+            const timeText = item.querySelector('.grid.grid-cols-2 > div:first-child .text-lg')?.textContent || '0h';
+            const valueText = item.querySelector('.grid.grid-cols-2 > div:last-child .text-lg')?.textContent || '$0';
+
+            totalTimeSaved += parseInt(timeText.replace('h', '')) || 0;
+            totalAnnualValue += parseInt(valueText.replace(/[$,]/g, '')) || 0;
+          }
+        } else {
+          (item as HTMLElement).style.display = 'none';
+        }
+      });
+
+      resultsCount.textContent = visibleCount.toString();
+
+      // Update widgets
+      const widgetTotalAutomations = document.getElementById('widgetTotalAutomations');
+      const widgetTimeSaved = document.getElementById('widgetTimeSaved');
+      const widgetAnnualValue = document.getElementById('widgetAnnualValue');
+      const widgetAvgTime = document.getElementById('widgetAvgTime');
+
+      if (widgetTotalAutomations) widgetTotalAutomations.textContent = visibleCount.toString();
+      if (widgetTimeSaved) widgetTimeSaved.textContent = `${totalTimeSaved}h`;
+      if (widgetAnnualValue) widgetAnnualValue.textContent = `$${totalAnnualValue.toLocaleString()}`;
+      if (widgetAvgTime) {
+        const avgTime = visibleCount > 0 ? Math.round(totalTimeSaved / visibleCount) : 0;
+        widgetAvgTime.textContent = `${avgTime}h`;
+      }
+
+      if (visibleCount === 0) {
+        automationsGrid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        automationsGrid.style.display = 'grid';
+        noResults.style.display = 'none';
+      }
+    }
+
+    searchInput.addEventListener('input', filterAutomations);
+    departmentSelect.addEventListener('change', filterAutomations);
+    tagSelect.addEventListener('change', filterAutomations);
+    authorSelect.addEventListener('change', filterAutomations);
+    statusSelect.addEventListener('change', filterAutomations);
+
+    clearButton.addEventListener('click', () => {
+      searchInput.value = '';
+      departmentSelect.value = '';
+      tagSelect.value = '';
+      authorSelect.value = '';
+      statusSelect.value = '';
+      filterAutomations();
+    });
+
+    // Apply filter on page load
+    filterAutomations();
+  </script>
+</BaseLayout>

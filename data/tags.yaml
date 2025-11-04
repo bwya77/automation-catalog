@@ -1,0 +1,61 @@
+tags:
+  - id: azure
+    name: Azure
+    color: '#0078D4'
+  - id: m365
+    name: M365
+    color: '#D83B01'
+  - id: gitlab
+    name: GitLab
+    color: '#FC6D26'
+  - id: connectwise
+    name: ConnectWise
+    color: '#003A70'
+  - id: ai
+    name: AI
+    color: '#10A37F'
+  - id: azure-functions
+    name: Azure Functions
+    color: '#0062AD'
+  - id: azure-runbooks
+    name: Azure Runbooks
+    color: '#1A4EBB'
+  - id: power-automate
+    name: Power Automate
+    color: '#0066FF'
+  - id: powershell
+    name: PowerShell
+    color: '#012456'
+  - id: n8n
+    name: N8N
+    color: '#376147'
+  - id: mitel
+    name: Mitel
+    color: '#E31C79'
+  - id: azure-sql
+    name: Azure SQL
+    color: '#0078D4'
+  - id: hybrid-runbook-worker
+    name: Hybrid Runbook Worker
+    color: '#1A4EBB'
+  - id: sophos
+    name: Sophos
+    color: '#ED1C24'
+  - id: bitwarden
+    name: Bitwarden
+    color: '#262261'
+  - id: logic-apps
+    name: Logic Apps
+    color: '#0078D4'
+  - id: forms
+    name: Forms
+    color: '#68217A'
+  - id: autotask
+    name: Autotask
+    color: '#FF6F00'
+  - id: intune
+    name: Intune
+    color: '#107C10'
+  - id: microsoft
+    name: Microsoft
+    color: '#567373'

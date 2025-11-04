@@ -1,0 +1,44 @@
+name: AI Ticket Summary Automation
+author: margaret-potter
+department: executive
+customer: "Wyatt Technology Solutions"
+status: live
+description: Automates the summarization of ConnectWise tickets using AI to enhance efficiency and accuracy in ticket management.
+tags:
+  - ai
+  - microsoft
+  - connectwise
+  - powershell
+systems:
+  - Connectwise Manage
+  - Microsoft 365
+time_saved_hours_per_month: 83
+annual_value_usd: 2070
+created: 2025-10-23
+last_updated: 2025-10-29
+closed: 2025-11-10
+links:
+  - name: Source Code
+    url: https://gitlab.com/
+  - name: Runbook
+    url: https://example.com/user-onboarding-automation
+  - name: Microsoft Form Template
+    url: https://forms.microsoft.com/
+schedules:
+  - frequency: On Form Submission
+api_keys:
+  - name: API_M365_Admin_Key
+    system: Microsoft 365
+    expiration: 2025-11-29
+    notes: M365 Admin API Key for user provisioning
+    url: https://example.itglue.com/42/passwords/3233
+  - name: API_OpenAI
+    system: OpenAI
+    expiration: 2025-12-12
+    notes: OpenAI API Key for AI processing
+    url: https://example.itglue.com/42/passwords/3233
+  - name: CWM_API_Key
+    system: ConnectWise Manage
+    expiration: 2025-12-29
+    notes: ConnectWise Manage API Key for ticket access
+    url: https://example.itglue.com/42/passwords/3233

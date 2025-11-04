@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Emojis Configuration",
+  "description": "Schema for data/emojis.yaml",
+  "type": "object",
+  "required": ["emojis"],
+  "properties": {
+    "emojis": {
+      "type": "object",
+      "properties": {
+        "automation": {
+          "type": "string",
+          "description": "Emoji used for automation icons"
+        },
+        "timeSaved": {
+          "type": "string",
+          "description": "Emoji for time saved metrics"
+        },
+        "money": {
+          "type": "string",
+          "description": "Emoji for financial value indicators"
+        },
+        "chart": {
+          "type": "string",
+          "description": "Emoji for data visualization icons"
+        },
+        "key": {
+          "type": "string",
+          "description": "Emoji for API keys and credentials"
+        },
+        "warning": {
+          "type": "string",
+          "description": "Emoji for warning indicators"
+        },
+        "calendar": {
+          "type": "string",
+          "description": "Emoji for calendar and scheduling"
+        },
+        "checkmark": {
+          "type": "string",
+          "description": "Emoji for success indicators"
+        },
+        "link": {
+          "type": "string",
+          "description": "Emoji for external links"
+        },
+        "computer": {
+          "type": "string",
+          "description": "Emoji for system and environment"
+        },
+        "schedule": {
+          "type": "string",
+          "description": "Emoji for schedule and timing"
+        },
+        "completed": {
+          "type": "string",
+          "description": "Emoji for completion status"
+        },
+        "favicon": {
+          "type": "string",
+          "description": "Emoji for browser tab icon (favicon)"
+        }
+      }
+    }
+  }
+}

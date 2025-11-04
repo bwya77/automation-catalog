@@ -1,0 +1,43 @@
+name: Timesheet Review Automation
+author: frank-wright
+department: hr
+customer: "internal"
+status: development
+description: Automates the review and approval process for employee timesheets using Azure Functions and PowerShell scripts.
+tags:
+  - azure
+  - powershell
+systems:
+  - Azure AD
+  - Azure Functions
+time_saved_hours_per_month: 40
+annual_value_usd: 12000
+created: 2025-10-30
+last_updated: 2025-10-30
+links:
+  - name: Runbook
+    url: https://docs.example.com/runbooks/timesheet-review-automation
+  - name: Sentry
+    url: https://sentry.io/organizations/example/timesheet-review-automation
+  - name: Source Code
+    url: https://dev.azure.com/example/automation/_git/timesheet-review-automation
+schedules:
+  - frequency: Every 2 days
+    time: 6:00 AM
+    timezone: America/Chicago
+    days:
+      - Mon
+      - Wed
+      - Fri
+      - Sun
+api_keys:
+  - name: Workday_Timesheet_Review
+    system: Workday
+    expiration: 2027-10-29
+    notes: Timesheets.Review.All, User.Read.All permissions
+    url: https://example.itglue.com/42544/passwords/3967
+  - name: AzureAD_User_Lookup
+    system:  Azure AD
+    expiration: 2027-01-29
+    notes: API key for looking up users in M365
+    url: https://example.itglue.com/4244/passwords/3389

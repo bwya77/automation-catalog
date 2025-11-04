@@ -1,0 +1,157 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Automation Metadata",
+  "description": "Schema for automation metadata.yaml files",
+  "type": "object",
+  "required": ["name", "author", "department", "status", "description", "tags", "systems", "time_saved_hours_per_month", "annual_value_usd", "created", "last_updated"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name of the automation"
+    },
+    "author": {
+      "type": "string",
+      "description": "The engineer ID who created this automation"
+    },
+    "department": {
+      "type": "string",
+      "description": "The department this automation belongs to"
+    },
+    "customer": {
+      "type": "string",
+      "description": "Optional customer/client name"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["live", "development", "backlog"],
+      "description": "Current status of the automation"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of what this automation does"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of tags/keywords for categorization"
+    },
+    "systems": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of systems/platforms this automation integrates with"
+    },
+    "time_saved_hours_per_month": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Estimated hours saved per month by this automation"
+    },
+    "annual_value_usd": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Annual value in USD saved by this automation"
+    },
+    "created": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Date this automation was created (YYYY-MM-DD)"
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Date this automation was last updated (YYYY-MM-DD)"
+    },
+    "closed": {
+      "type": "string",
+      "format": "date",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+      "description": "Optional date when this automation was completed/closed (YYYY-MM-DD)"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name for the link"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the resource"
+          }
+        }
+      },
+      "description": "Optional list of related links"
+    },
+    "schedules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["frequency"],
+        "properties": {
+          "frequency": {
+            "type": "string",
+            "description": "How often this automation runs (e.g., 'Daily', 'Weekly', 'Hourly')"
+          },
+          "time": {
+            "type": "string",
+            "description": "Time of day the automation runs (e.g., '9:00 AM')"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Timezone for the schedule (e.g., 'EST', 'UTC')"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Days of week for weekly schedules"
+          }
+        }
+      },
+      "description": "Optional list of schedules when this automation runs"
+    },
+    "api_keys": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "system"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name/identifier of the API key"
+          },
+          "system": {
+            "type": "string",
+            "description": "System/service this API key is for"
+          },
+          "expiration": {
+            "type": ["string", "null"],
+            "format": "date",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+            "description": "Expiration date of the API key (YYYY-MM-DD) or null"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Additional notes about this API key"
+          },
+          "link": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to manage this credential"
+          }
+        }
+      },
+      "description": "Optional list of API keys and credentials used by this automation"
+    }
+  }
+}

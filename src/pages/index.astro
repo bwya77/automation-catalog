@@ -1,0 +1,692 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StatsCard from '../components/StatsCard.astro';
+import AutomationCard from '../components/AutomationCard.astro';
+import TimeSeriesChart from '../components/TimeSeriesChart';
+import { loadAutomations, getExpiringApiKeys, loadEngineers, loadEmojis } from '../utils/data';
+
+// Load emoji configuration
+const emojis = loadEmojis();
+
+// Load all data (client-side filtering will be applied)
+const allAutomations = loadAutomations();
+const engineers = loadEngineers();
+
+// Filter to only live automations with a closed date for impact calculations
+const automations = allAutomations.filter(a => a.status === 'live' && a.closed);
+
+// Calculate stats
+const totalTimeSaved = automations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+const totalAnnualValue = automations.reduce((sum, a) => sum + a.annual_value_usd, 0);
+const expiringKeys = getExpiringApiKeys(90);
+
+// Calculate current month growth (based on closed date for live automations)
+const now = new Date();
+const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+// Growth calculations based on live automations that went live this month
+const automationsThisMonth = automations.filter(a => {
+  const closedDate = new Date(a.closed!);
+  return closedDate >= currentMonthStart && closedDate <= currentMonthEnd;
+});
+
+const growthAutomations = automationsThisMonth.length;
+const growthTimeSaved = automationsThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual_value_usd, 0);
+
+// Calculate keys expiring this month (within 30 days)
+const keysExpiringThisMonth = getExpiringApiKeys(30).length;
+const growthExpiringKeys = keysExpiringThisMonth;
+
+// Generate time series data based on automation creation dates
+// This shows cumulative time saved and value as automations were added
+const generateTimeSeriesData = () => {
+  // Get the last 12 months
+  const months: { month: string; date: Date; hours: number; value: number }[] = [];
+  const now = new Date();
+
+  for (let i = 11; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    // Use the last day of the month (or today if it's the current month)
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+    const compareDate = i === 0 ? now : endOfMonth;
+
+    months.push({
+      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      date: compareDate,
+      hours: 0,
+      value: 0
+    });
+  }
+
+  // Calculate cumulative time saved and value for each month
+  months.forEach((monthData) => {
+    // Sum time saved and value from all automations that were closed (went live) up to this month
+    const automationsUpToThisMonth = automations.filter(a => {
+      const closedDate = new Date(a.closed!);
+      return closedDate <= monthData.date;
+    });
+
+    monthData.hours = automationsUpToThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+    // Convert annual value to monthly value by dividing by 12
+    monthData.value = Math.round(automationsUpToThisMonth.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+  });
+
+  // Return in the format expected by the chart
+  return months.map(m => ({ month: m.month, hours: m.hours, value: m.value }));
+};
+
+const timeSeriesData = generateTimeSeriesData();
+
+// Get recent automations (show all, not just live/closed)
+const recentAutomations = [...allAutomations]
+  .sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime())
+  .slice(0, 4);
+
+const formatCurrency = (amount: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(amount);
+};
+
+// Pre-process expiring keys with their styles
+const processedExpiringKeys = expiringKeys.slice(0, 5).map(key => {
+  const daysUntilExpiration = Math.ceil(
+    (new Date(key.expiration!).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+  );
+  const isUrgent = daysUntilExpiration <= 30;
+
+  return {
+    ...key,
+    daysUntilExpiration,
+    isUrgent,
+    borderClass: isUrgent ? 'border-red-500' : 'border-yellow-500',
+    badgeClass: isUrgent ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700',
+  };
+});
+---
+
+<BaseLayout title="Dashboard - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <!-- Header -->
+    <div class="mb-6 sm:mb-8">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+        Overview of all DevOps automations and their impact
+      </p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <StatsCard
+        title="Total Automations"
+        value={automations.length}
+        icon={emojis.automation}
+        subtitle={`Across ${new Set(automations.map(a => a.department)).size} departments`}
+        growth={growthAutomations}
+      />
+
+      <StatsCard
+        title="Monthly Time Saved"
+        value={`${totalTimeSaved}h`}
+        icon={emojis.timeSaved}
+        subtitle="Across all automations"
+        growth={growthTimeSaved}
+        growthUnit="h"
+      />
+
+      <StatsCard
+        title="Annual Value"
+        value={formatCurrency(totalAnnualValue)}
+        icon={emojis.money}
+        subtitle="Total business value"
+        growth={growthAnnualValue}
+        growthUnit="$"
+      />
+
+      <StatsCard
+        title="Keys Expiring Soon"
+        value={expiringKeys.length}
+        icon={emojis.key}
+        subtitle="Within 90 days"
+        growth={growthExpiringKeys}
+      />
+    </div>
+
+    <!-- Time Series Chart -->
+    <div class="mb-8" id="timeSeriesContainer">
+      <TimeSeriesChart
+        client:load
+        data={timeSeriesData}
+        title="Automation Impact Trend"
+      />
+    </div>
+    <div class="mb-8 hidden" id="timeSeriesFiltered">
+      <div class="card p-8 text-center">
+        <p class="text-gray-600 dark:text-gray-400">
+          📊 Chart filtered to customer selection. Switch to "All Customers" to view the full impact trend.
+        </p>
+      </div>
+    </div>
+
+    <!-- Two Column Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <!-- Recent Automations -->
+      <div>
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">Recent Updates</h2>
+          <a href="/automations" class="text-sm sm:text-base text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium whitespace-nowrap">
+            View All →
+          </a>
+        </div>
+        <div class="space-y-4" id="recentUpdatesContainer">
+          {recentAutomations.map(automation => (
+            <div data-automation-id={automation.id} data-customer={automation.customer || ''}>
+              <AutomationCard automation={automation} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Upcoming Expirations -->
+      <div>
+        <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Upcoming Expirations</h2>
+        <div class="card p-6">
+          {expiringKeys.length === 0 ? (
+            <p class="text-gray-500 dark:text-gray-400 text-center py-8">
+              {emojis.checkmark} No API keys expiring in the next 90 days
+            </p>
+          ) : (
+            <div class="space-y-4">
+              {processedExpiringKeys.map(key => (
+                <div class={`border-l-4 pl-4 py-2 ${key.borderClass}`}>
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <h3 class="font-semibold text-gray-900 dark:text-gray-100">{key.name}</h3>
+                      <p class="text-sm text-gray-600 dark:text-gray-400">{key.system}</p>
+                      <a
+                        href={`/automations/${key.automationId}`}
+                        class="text-xs text-primary-600 dark:text-primary-400 hover:underline"
+                      >
+                        {key.automationName}
+                      </a>
+                    </div>
+                    <div class="text-right">
+                      <span class={`badge ${key.badgeClass}`}>
+                        {key.daysUntilExpiration}d
+                      </span>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {new Date(key.expiration!).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {expiringKeys.length > 5 && (
+                <a href="/calendar" class="block text-center text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium pt-4 border-t dark:border-gray-700">
+                  View All on Calendar →
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+
+        <!-- Department Breakdown -->
+        <div class="mt-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">By Department</h2>
+          <div class="card p-6">
+            <div class="space-y-3">
+              {Array.from(new Set(automations.map(a => a.department))).map(dept => {
+                const deptAutomations = automations.filter(a => a.department === dept);
+                const deptTimeSaved = deptAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const deptMonthlyValue = Math.round(deptAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+
+                return (
+                  <div class="flex justify-between items-center">
+                    <div>
+                      <span class="font-medium text-gray-900 dark:text-gray-100 capitalize">{dept}</span>
+                      <span class="text-sm text-gray-500 dark:text-gray-400 ml-2">
+                        ({deptAutomations.length} automation{deptAutomations.length !== 1 ? 's' : ''})
+                      </span>
+                    </div>
+                    <div class="text-right">
+                      <div class="font-semibold text-gray-900 dark:text-gray-100">{deptTimeSaved}h/mo</div>
+                      <div class="text-sm text-green-600 dark:text-green-400">{formatCurrency(deptMonthlyValue)}/mo</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        <!-- Automations per Engineer -->
+        <div class="mt-8">
+          <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Automations per Engineer</h2>
+          <div class="card p-6">
+            <div class="space-y-3">
+              {engineers.map(engineer => {
+                const engineerAutomations = automations.filter(a => a.author === engineer.id);
+                const allEngineerAutomations = allAutomations.filter(a => a.author === engineer.id);
+
+                if (allEngineerAutomations.length === 0) return null;
+
+                const engineerTimeSaved = engineerAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const engineerMonthlyValue = Math.round(engineerAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+                const liveCount = allEngineerAutomations.filter(a => a.status === 'live').length;
+                const devCount = allEngineerAutomations.filter(a => a.status === 'development').length;
+                const backlogCount = allEngineerAutomations.filter(a => a.status === 'backlog').length;
+
+                return (
+                  <div class="border-l-4 border-primary-500 pl-4 py-2">
+                    <div class="flex gap-4 items-start">
+                      <!-- Avatar -->
+                      <div class="flex-shrink-0">
+                        {engineer.avatar ? (
+                          <img
+                            src={engineer.avatar}
+                            alt={engineer.name}
+                            class="w-14 h-14 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                            loading="lazy"
+                            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+                          />
+                        ) : null}
+                        <div
+                          class="w-14 h-14 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-lg border-2 border-gray-300 dark:border-gray-600"
+                          style={engineer.avatar ? 'display:none;' : ''}
+                        >
+                          {engineer.name.split(' ').map(n => n[0]).join('')}
+                        </div>
+                      </div>
+
+                      <!-- Info -->
+                      <div class="flex-1 min-w-0">
+                        <div class="font-semibold text-gray-900 dark:text-gray-100 mb-0.5">
+                          {engineer.name}
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          {engineer.role}
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                          {liveCount > 0 && (
+                            <span class="badge bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs">
+                              {liveCount} live
+                            </span>
+                          )}
+                          {devCount > 0 && (
+                            <span class="badge bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-xs">
+                              {devCount} dev
+                            </span>
+                          )}
+                          {backlogCount > 0 && (
+                            <span class="badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs">
+                              {backlogCount} backlog
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <!-- Metrics -->
+                      <div class="text-right flex-shrink-0">
+                        <div class="font-bold text-gray-900 dark:text-gray-100 text-lg">{allEngineerAutomations.length}</div>
+                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">automation{allEngineerAutomations.length !== 1 ? 's' : ''}</div>
+                        <div class="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                          {engineerTimeSaved}h/mo
+                        </div>
+                        <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                          {formatCurrency(engineerMonthlyValue)}/mo
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline define:vars={{ allAutomations, engineers }}>
+    // @ts-ignore - Variables injected by Astro define:vars
+    // Client-side filtering based on URL parameter
+    function applyCustomerFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const customerFilter = params.get('customer');
+
+      // Determine which automations to use based on filter (only LIVE automations)
+      const isFiltered = customerFilter && customerFilter !== 'all';
+      const allLiveAutomations = allAutomations.filter(a => a.status === 'live' && a.closed);
+      const filteredAutomations = isFiltered
+        ? allLiveAutomations.filter(a => a.customer && a.customer.toLowerCase() === customerFilter.toLowerCase())
+        : allLiveAutomations;
+      const filteredLiveAutomations = filteredAutomations;
+
+      // If no filtering, reset all widgets to show all data
+      if (!isFiltered) {
+        // Show all department items
+        const deptHeadings = Array.from(document.querySelectorAll('h2')).filter(h => h.textContent?.includes('By Department'));
+        const deptBreakdown = deptHeadings.length > 0
+          ? deptHeadings[0].nextElementSibling?.querySelector('.space-y-3')
+          : null;
+        if (deptBreakdown) {
+          const deptItems = deptBreakdown.querySelectorAll('.flex.justify-between');
+          deptItems.forEach(item => {
+            item.style.display = 'flex';
+          });
+        }
+
+        // Show all engineer items
+        const engineerHeadings = Array.from(document.querySelectorAll('h2')).filter(h => h.textContent?.includes('Automations per Engineer'));
+        const engineerList = engineerHeadings.length > 0
+          ? engineerHeadings[0].nextElementSibling?.querySelector('.space-y-3')
+          : null;
+        if (engineerList) {
+          const engineerItems = engineerList.querySelectorAll('.border-l-4');
+          engineerItems.forEach(item => {
+            item.style.display = 'block';
+          });
+        }
+
+        // Show time series chart
+        const timeSeriesContainer = document.getElementById('timeSeriesContainer');
+        const timeSeriesFiltered = document.getElementById('timeSeriesFiltered');
+        if (timeSeriesContainer && timeSeriesFiltered) {
+          timeSeriesContainer.style.display = 'block';
+          timeSeriesFiltered.style.display = 'none';
+        }
+
+        // Show all recent automations
+        const recentContainer = document.getElementById('recentUpdatesContainer');
+        if (recentContainer) {
+          const recentCards = recentContainer.querySelectorAll('[data-automation-id]');
+          recentCards.forEach(card => {
+            card.style.display = 'block';
+          });
+        }
+
+        return;
+      }
+
+      // Recalculate stats
+      const totalCount = filteredAutomations.length;
+      const totalTimeSaved = filteredLiveAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+      const totalAnnualValue = filteredLiveAutomations.reduce((sum, a) => sum + a.annual_value_usd, 0);
+
+      // Get expiring keys for filtered automations
+      let expiringKeysCount = 0;
+
+      filteredAutomations.forEach(automation => {
+        if (automation.api_keys) {
+          automation.api_keys.forEach(key => {
+            if (key.expiration) {
+              const expiration = new Date(key.expiration);
+              const daysUntil = Math.ceil((expiration.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              if (daysUntil >= 0 && daysUntil <= 90) {
+                expiringKeysCount++;
+              }
+            }
+          });
+        }
+      });
+
+      // Calculate growth for filtered automations
+      const now = new Date();
+      const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+      const automationsThisMonth = filteredAutomations.filter(a => {
+        const closedDate = new Date(a.closed);
+        return closedDate >= currentMonthStart && closedDate <= currentMonthEnd;
+      });
+
+      const growthAutomations = automationsThisMonth.length;
+      const growthTimeSaved = automationsThisMonth.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+      const growthAnnualValue = automationsThisMonth.reduce((sum, a) => sum + a.annual_value_usd, 0);
+
+      const keysExpiringThisMonth = filteredAutomations.reduce((count, automation) => {
+        if (automation.api_keys) {
+          automation.api_keys.forEach(key => {
+            if (key.expiration) {
+              const expiration = new Date(key.expiration);
+              const daysUntil = Math.ceil((expiration.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              if (daysUntil >= 0 && daysUntil <= 30) {
+                count++;
+              }
+            }
+          });
+        }
+        return count;
+      }, 0);
+
+      // Update stats cards in the DOM
+      const statsCards = document.querySelectorAll('.grid .card');
+      if (statsCards[0]) {
+        const countValue = statsCards[0].querySelector('.text-3xl');
+        const countGrowth = statsCards[0].querySelector('.text-xs.font-semibold');
+        if (countValue) countValue.textContent = totalCount.toString();
+        if (countGrowth && growthAutomations > 0) {
+          countGrowth.textContent = `+${growthAutomations}`;
+        } else if (countGrowth) {
+          countGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[1]) {
+        const timeSavedValue = statsCards[1].querySelector('.text-3xl');
+        const timeSavedGrowth = statsCards[1].querySelector('.text-xs.font-semibold');
+        if (timeSavedValue) timeSavedValue.textContent = `${totalTimeSaved}h`;
+        if (timeSavedGrowth && growthTimeSaved > 0) {
+          timeSavedGrowth.textContent = `+${growthTimeSaved}h`;
+        } else if (timeSavedGrowth) {
+          timeSavedGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[2]) {
+        const valueElement = statsCards[2].querySelector('.text-3xl');
+        const valueGrowth = statsCards[2].querySelector('.text-xs.font-semibold');
+        const formatted = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 0
+        }).format(totalAnnualValue);
+        if (valueElement) valueElement.textContent = formatted;
+        if (valueGrowth && growthAnnualValue > 0) {
+          const formattedGrowth = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+          }).format(growthAnnualValue);
+          valueGrowth.textContent = `+${formattedGrowth}`;
+        } else if (valueGrowth) {
+          valueGrowth.textContent = '';
+        }
+      }
+
+      if (statsCards[3]) {
+        const keysValue = statsCards[3].querySelector('.text-3xl');
+        const keysGrowth = statsCards[3].querySelector('.text-xs.font-semibold');
+        if (keysValue) keysValue.textContent = expiringKeysCount.toString();
+        if (keysGrowth && keysExpiringThisMonth > 0) {
+          keysGrowth.textContent = `+${keysExpiringThisMonth}`;
+        } else if (keysGrowth) {
+          keysGrowth.textContent = '';
+        }
+      }
+
+      // Hide time series chart when filtering
+      const timeSeriesContainer = document.getElementById('timeSeriesContainer');
+      const timeSeriesFiltered = document.getElementById('timeSeriesFiltered');
+      if (timeSeriesContainer && timeSeriesFiltered) {
+        timeSeriesContainer.style.display = 'none';
+        timeSeriesFiltered.style.display = 'block';
+      }
+
+      // Filter recent automations display
+      const recentContainer = document.getElementById('recentUpdatesContainer');
+      if (recentContainer) {
+        const recentCards = recentContainer.querySelectorAll('[data-automation-id]');
+        filteredAutomations.sort((a, b) => new Date(b.last_updated).getTime() - new Date(a.last_updated).getTime());
+        const recentIds = new Set(filteredAutomations.slice(0, 4).map(a => a.id));
+
+        recentCards.forEach(card => {
+          const automationId = card.getAttribute('data-automation-id');
+          if (automationId && !recentIds.has(automationId)) {
+            card.style.display = 'none';
+          } else {
+            card.style.display = 'block';
+          }
+        });
+      }
+
+      // Filter department breakdown
+      // Find the "By Department" heading and get the next card's space-y-3 container
+      const deptHeadings = Array.from(document.querySelectorAll('h2')).filter(h => h.textContent?.includes('By Department'));
+      const deptBreakdown = deptHeadings.length > 0
+        ? deptHeadings[0].nextElementSibling?.querySelector('.space-y-3')
+        : null;
+      if (deptBreakdown) {
+        const deptItems = deptBreakdown.querySelectorAll('.flex.justify-between');
+        const filteredDepts = new Set(filteredLiveAutomations.map(a => a.department.toLowerCase()));
+
+        deptItems.forEach((item) => {
+          const deptName = item.querySelector('.font-medium')?.textContent?.trim().toLowerCase();
+
+          if (deptName && !filteredDepts.has(deptName)) {
+            item.style.display = 'none';
+          } else {
+            item.style.display = 'flex';
+
+            // Recalculate department stats
+            if (deptName) {
+              const deptAutomations = filteredLiveAutomations.filter(a => a.department.toLowerCase() === deptName);
+              const deptTimeSaved = deptAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+              const deptMonthlyValue = Math.round(deptAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+
+              const countSpan = item.querySelector('.text-sm.text-gray-500');
+              const rightContainer = item.querySelector('.text-right');
+
+              if (countSpan) {
+                countSpan.textContent = `(${deptAutomations.length} automation${deptAutomations.length !== 1 ? 's' : ''})`;
+              }
+
+              if (rightContainer) {
+                const rightDivs = rightContainer.querySelectorAll('div');
+
+                if (rightDivs.length >= 2) {
+                  const timeDiv = rightDivs[0];  // First div is time saved
+                  const valueDiv = rightDivs[1];  // Second div is value
+
+                  timeDiv.textContent = `${deptTimeSaved}h/mo`;
+
+                  const formatted = new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                  }).format(deptMonthlyValue);
+                  valueDiv.textContent = `${formatted}/mo`;
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Filter engineer list
+      // Find the "Automations per Engineer" heading and get the next card's space-y-3 container
+      const engineerHeadings = Array.from(document.querySelectorAll('h2')).filter(h => h.textContent?.includes('Automations per Engineer'));
+      const engineerList = engineerHeadings.length > 0
+        ? engineerHeadings[0].nextElementSibling?.querySelector('.space-y-3')
+        : null;
+      if (engineerList) {
+        const engineerItems = engineerList.querySelectorAll('.border-l-4');
+
+        engineerItems.forEach((item) => {
+          const engineerName = item.querySelector('.font-semibold')?.textContent?.trim();
+          if (engineerName) {
+            const engineer = engineers.find(e => e.name === engineerName);
+            if (engineer) {
+              const engineerAutomations = filteredLiveAutomations.filter(a => a.author === engineer.id);
+              const allEngineerAutomations = filteredAutomations.filter(a => a.author === engineer.id);
+
+              if (allEngineerAutomations.length === 0) {
+                item.style.display = 'none';
+              } else {
+                item.style.display = 'block';
+
+                // Recalculate engineer stats
+                const engineerTimeSaved = engineerAutomations.reduce((sum, a) => sum + a.time_saved_hours_per_month, 0);
+                const engineerMonthlyValue = Math.round(engineerAutomations.reduce((sum, a) => sum + (a.annual_value_usd / 12), 0));
+                const liveCount = allEngineerAutomations.filter(a => a.status === 'live').length;
+                const devCount = allEngineerAutomations.filter(a => a.status === 'development').length;
+                const backlogCount = allEngineerAutomations.filter(a => a.status === 'backlog').length;
+
+                // Find the metrics container first, then select within it
+                const metricsContainer = item.querySelector('.text-right.flex-shrink-0');
+
+                if (metricsContainer) {
+                  const divs = metricsContainer.querySelectorAll('div');
+
+                  if (divs.length >= 4) {
+                    const countDiv = divs[0];  // First div is count
+                    const countLabel = divs[1];  // Second div is label
+                    const timeDiv = divs[2];  // Third div is time saved
+                    const valueDiv = divs[3];  // Fourth div is value
+
+                    countDiv.textContent = allEngineerAutomations.length.toString();
+                    countLabel.textContent = `automation${allEngineerAutomations.length !== 1 ? 's' : ''}`;
+                    timeDiv.textContent = `${engineerTimeSaved}h/mo`;
+
+                    const formatted = new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'USD',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                    }).format(engineerMonthlyValue);
+                    valueDiv.textContent = `${formatted}/mo`;
+                  }
+                }
+
+                // Update status badges
+                const badgeContainer = item.querySelector('.flex.gap-2.flex-wrap');
+                if (badgeContainer) {
+                  badgeContainer.innerHTML = '';
+                  if (liveCount > 0) {
+                    const liveBadge = document.createElement('span');
+                    liveBadge.className = 'badge bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs';
+                    liveBadge.textContent = `${liveCount} live`;
+                    badgeContainer.appendChild(liveBadge);
+                  }
+                  if (devCount > 0) {
+                    const devBadge = document.createElement('span');
+                    devBadge.className = 'badge bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-xs';
+                    devBadge.textContent = `${devCount} dev`;
+                    badgeContainer.appendChild(devBadge);
+                  }
+                  if (backlogCount > 0) {
+                    const backlogBadge = document.createElement('span');
+                    backlogBadge.className = 'badge bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs';
+                    backlogBadge.textContent = `${backlogCount} backlog`;
+                    badgeContainer.appendChild(backlogBadge);
+                  }
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Apply filter when page loads
+    document.addEventListener('DOMContentLoaded', applyCustomerFilter);
+  </script>
+</BaseLayout>

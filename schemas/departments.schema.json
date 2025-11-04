@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Departments Configuration",
+  "description": "Schema for data/departments.yaml",
+  "type": "object",
+  "required": ["departments"],
+  "properties": {
+    "departments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "description"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the department"
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name of the department"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of what this department does"
+          }
+        }
+      }
+    }
+  }
+}

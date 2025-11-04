@@ -1,0 +1,196 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { loadAutomations, loadEmojis } from '../utils/data';
+import CalendarView from '../components/CalendarView';
+
+// Load all automations (client-side filtering will be applied)
+const automations = loadAutomations();
+
+// Load emoji configuration
+const emojis = loadEmojis();
+
+// Collect all API keys with expirations
+const apiKeysWithExpiration: Array<{
+  key: string;
+  system: string;
+  expiration: Date;
+  automationId: string;
+  automationName: string;
+  customer?: string;
+  notes?: string;
+}> = [];
+
+automations.forEach(automation => {
+  if (!automation.api_keys) return;
+
+  automation.api_keys.forEach(key => {
+    if (key.expiration) {
+      apiKeysWithExpiration.push({
+        key: key.name,
+        system: key.system,
+        expiration: new Date(key.expiration),
+        automationId: automation.id,
+        automationName: automation.name,
+        customer: automation.customer,
+        notes: key.notes,
+      });
+    }
+  });
+});
+
+// Sort by expiration date
+apiKeysWithExpiration.sort((a, b) => a.expiration.getTime() - b.expiration.getTime());
+
+// Convert to serializable format for React component
+const serializedKeys = apiKeysWithExpiration.map(key => ({
+  key: key.key,
+  system: key.system,
+  expiration: key.expiration.toISOString(),
+  automationId: key.automationId,
+  automationName: key.automationName,
+  customer: key.customer,
+  notes: key.notes,
+}));
+
+const getDaysUntilExpiration = (date: Date) => {
+  return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+};
+---
+
+<BaseLayout title="Expiration Calendar - Automation Catalog">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+    <!-- Header -->
+    <div class="mb-4 sm:mb-6">
+      <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100">Expiration Calendar</h1>
+      <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+        Track API keys and credentials expiration dates
+      </p>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Total Keys Tracked</p>
+            <p id="totalKeys" class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{apiKeysWithExpiration.length}</p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.key}</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Expiring in 30 Days</p>
+            <p id="expiring30" class="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">
+              {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 30 && getDaysUntilExpiration(k.expiration) > 0).length}
+            </p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.warning}</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <p class="text-xs font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide">Expiring in 90 Days</p>
+            <p id="expiring90" class="mt-1 text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+              {apiKeysWithExpiration.filter(k => getDaysUntilExpiration(k.expiration) <= 90 && getDaysUntilExpiration(k.expiration) > 30).length}
+            </p>
+          </div>
+          <div class="text-3xl opacity-70 ml-3">{emojis.calendar}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendar View -->
+    {apiKeysWithExpiration.length > 0 || automations.some(a => a.closed) ? (
+      <CalendarView
+        client:load
+        apiKeys={serializedKeys}
+        automations={automations.map(a => ({
+          id: a.id,
+          name: a.name,
+          closed: a.closed,
+          customer: a.customer
+        }))}
+      />
+    ) : (
+      <div class="card p-12 text-center">
+        <p class="text-gray-500 dark:text-gray-400 text-lg">
+          No API keys or credentials with expiration dates found.
+        </p>
+        <p class="text-gray-400 dark:text-gray-500 text-sm mt-2">
+          Add expiration dates to your automation metadata to track them here.
+        </p>
+      </div>
+    )}
+  </div>
+
+  <script is:inline define:vars={{ automations, serializedKeys }}>
+    // Client-side filtering based on URL parameter
+    function applyCustomerFilter() {
+      const params = new URLSearchParams(window.location.search);
+      const customerFilter = params.get('customer');
+
+      if (!customerFilter || customerFilter === 'all') {
+        return; // No filtering needed, page shows all data
+      }
+
+      // Filter automations by customer
+      const filteredAutomations = automations.filter(a => a.customer === customerFilter);
+
+      // Collect and filter API keys
+      const apiKeysWithExpiration = [];
+      filteredAutomations.forEach(automation => {
+        if (!automation.api_keys) return;
+
+        automation.api_keys.forEach(key => {
+          if (key.expiration) {
+            apiKeysWithExpiration.push({
+              key: key.name,
+              system: key.system,
+              expiration: new Date(key.expiration),
+              automationId: automation.id,
+              automationName: automation.name,
+              notes: key.notes,
+            });
+          }
+        });
+      });
+
+      function getDaysUntilExpiration(date) {
+        return Math.ceil((date.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      }
+
+      // Update summary cards
+      const totalKeys = document.getElementById('totalKeys');
+      const expiring30 = document.getElementById('expiring30');
+      const expiring90 = document.getElementById('expiring90');
+
+      if (totalKeys) {
+        totalKeys.textContent = apiKeysWithExpiration.length.toString();
+      }
+
+      if (expiring30) {
+        const count = apiKeysWithExpiration.filter(k => {
+          const days = getDaysUntilExpiration(k.expiration);
+          return days <= 30 && days > 0;
+        }).length;
+        expiring30.textContent = count.toString();
+      }
+
+      if (expiring90) {
+        const count = apiKeysWithExpiration.filter(k => {
+          const days = getDaysUntilExpiration(k.expiration);
+          return days <= 90 && days > 30;
+        }).length;
+        expiring90.textContent = count.toString();
+      }
+    }
+
+    // Apply filter when page loads
+    document.addEventListener('DOMContentLoaded', applyCustomerFilter);
+  </script>
+</BaseLayout>

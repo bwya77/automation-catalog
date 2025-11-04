@@ -1,0 +1,22 @@
+departments:
+  - id: sales
+    name: Sales
+    description: Sales department automations
+  - id: it
+    name: IT
+    description: IT infrastructure and support automations
+  - id: hr
+    name: Human Resources
+    description: HR and people operations automations
+  - id: finance
+    name: Finance
+    description: Financial operations automations
+  - id: operations
+    name: Operations
+    description: General operations automations
+  - id: security
+    name: Security
+    description: Security operations and incident response automations
+  - id: executive
+    name: Executive
+    description: Executive-level automations and reporting

@@ -1,0 +1,52 @@
+---
+interface Props {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon?: string;
+  trend?: {
+    value: number;
+    isPositive: boolean;
+  };
+  growth?: number;
+  growthUnit?: string;
+}
+
+const { title, value, subtitle, icon = '📊', trend, growth, growthUnit } = Astro.props;
+
+const formatGrowth = (num: number) => {
+  return new Intl.NumberFormat('en-US').format(Math.abs(num));
+};
+---
+
+<div class="card p-6 relative">
+  <div class="flex items-start justify-between">
+    <div class="flex-1">
+      <p class="text-sm font-medium text-gray-600 dark:text-gray-400">{title}</p>
+      <p class="mt-2 text-3xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
+      {subtitle && (
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+      )}
+      {trend && (
+        <div class={`mt-2 flex items-center text-sm ${trend.isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+          <span>{trend.isPositive ? '↑' : '↓'} {Math.abs(trend.value)}%</span>
+          <span class="ml-2 text-gray-500 dark:text-gray-400">vs last month</span>
+        </div>
+      )}
+    </div>
+    <div class="text-4xl opacity-80">
+      {icon}
+    </div>
+  </div>
+  {growth !== undefined && growth !== 0 && (
+    <div class="absolute bottom-3 right-3">
+      <span class={`inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold ${
+        growth > 0
+          ? 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
+          : 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300'
+      }`}>
+        {growthUnit === '$' ? '$' : ''}{growth > 0 ? '+' : ''}{formatGrowth(growth)}{growthUnit && growthUnit !== '$' ? growthUnit : ''}
+      </span>
+    </div>
+  )}
+</div>

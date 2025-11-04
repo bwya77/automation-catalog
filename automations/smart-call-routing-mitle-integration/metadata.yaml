@@ -1,0 +1,36 @@
+name: AI Chatbot for customer service
+author: frank-wright
+department: executive
+customer: "internal"
+status: live
+description: Creates an AI chatbot integrated with customer service systems to handle common inquiries, provide instant responses, and escalate complex issues to human agents when necessary.
+tags:
+  - ai
+  - azure
+  - azure-runbooks
+  - powershell
+systems:
+  - Azure
+  - Sentry
+  - OpenAI
+time_saved_hours_per_month: 332.25
+annual_value_usd: 36700
+created: 2025-06-01
+last_updated: 2025-10-15
+closed: 2025-07-01
+links:
+  - name: Runbook
+    url: https://portal.azure.com/
+  - name: Sentry
+    url: https://dev.sentry.io/issues/?project=456786
+  - name: Source Code
+    url: https://gitlab.com/example/internal-devops/azure/
+schedules:
+  - frequency: Every 15 minutes
+    timezone: America/New_York
+api_keys:
+  - name: OpenAI_Chatbot_API_Key
+    system: OpenAI
+    notes: API key for accessing OpenAI services
+    expiration: 2025-12-31
+    link: https://itglue.com/424/passwords/33sd3286

@@ -1,0 +1,25 @@
+# build output
+dist/
+
+# generated types
+.astro/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# macOS-specific files
+.DS_Store
+
+# Azure Static Web Apps - SSO Configuration
+# The example file is tracked. Copy it to enable SSO and commit it.
+# To disable SSO, remove public/staticwebapp.config.json and commit
