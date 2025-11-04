@@ -19,6 +19,10 @@ It enables the team to easily:
 - Quickly access runbooks, source code, or monitoring dashboards
 - Visualize time-saved trends and upcoming expirations with graphs and calendars
 
+### 📸 Dashboard Preview
+
+![Automation Catalog Dashboard](images/UI.jpeg)
+
 ---
 
 ## 🏗️ Project Structure
