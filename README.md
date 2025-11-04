@@ -23,6 +23,8 @@ It enables the team to easily:
 
 ![Automation Catalog Dashboard](images/UI.jpeg)
 
+Image showing light and dark modes for the dashboard. 
+
 ---
 
 ## 🏗️ Project Structure
