@@ -1,0 +1,11 @@
+# Site Configuration
+# Update this file to change the site title, description, and footer text
+
+# The main title of the site (shown in browser tab and header)
+title: "Automation Catalog"
+
+# The site description (shown in meta tags)
+description: "DevOps Automation Team - Automation Tracking and Analytics"
+
+# The footer copyright text (supports HTML entities like &copy;)
+footer_text: "&copy; 2025 DevOps Automation Team. All rights reserved."

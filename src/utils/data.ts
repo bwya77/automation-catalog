@@ -80,6 +80,12 @@ export interface Emojis {
   favicon: string;
 }
 
+export interface SiteConfig {
+  title: string;
+  description: string;
+  footer_text: string;
+}
+
 function getDataPath(relativePath: string): string {
   return path.join(process.cwd(), relativePath);
 }
@@ -266,5 +272,29 @@ export function loadVersion(): string {
   } catch (error) {
     console.error('Error loading version:', error);
     return defaultVersion;
+  }
+}
+
+export function loadSiteConfig(): SiteConfig {
+  const filePath = getDataPath('data/site.yaml');
+
+  // Default configuration if file doesn't exist
+  const defaults: SiteConfig = {
+    title: 'Automation Catalog',
+    description: 'DevOps Automation Team - Automation Tracking and Analytics',
+    footer_text: '&copy; 2025 DevOps Automation Team. All rights reserved.',
+  };
+
+  if (!fs.existsSync(filePath)) {
+    return defaults;
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const data = yaml.load(content) as SiteConfig;
+    return { ...defaults, ...data };
+  } catch (error) {
+    console.error('Error loading site config:', error);
+    return defaults;
   }
 }
