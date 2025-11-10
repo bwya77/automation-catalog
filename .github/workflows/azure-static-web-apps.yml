@@ -1,5 +1,9 @@
 name: Deploy to Azure Static Web Apps
 
+permissions:
+  contents: read
+  pull-requests: write
+
 on:
   push:
     branches:
