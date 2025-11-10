@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import mermaid from 'mermaid';
+import DOMPurify from 'dompurify';
 
 export default function MermaidRenderer() {
   useEffect(() => {
@@ -29,7 +30,7 @@ export default function MermaidRenderer() {
           // Replace the pre/code block with the rendered SVG
           const container = document.createElement('div');
           container.className = 'mermaid-diagram';
-          container.innerHTML = svg;
+          container.innerHTML = DOMPurify.sanitize(svg, { FORCE_BODY: true });
           pre.replaceWith(container);
         } catch (error) {
           console.error('Mermaid rendering error:', error);
