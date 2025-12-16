@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import FilterableTimeSeriesChart from '../components/FilterableTimeSeriesChart';
 import { loadAutomations, loadEngineers, loadTags, loadEmojis } from '../utils/data';
 
 // Load all automations (client-side filtering will handle customer filter)
@@ -95,6 +96,25 @@ const statuses = ['live', 'development', 'backlog'] as const;
         </div>
       </div>
     </div>
+
+    <!-- Automation Impact Trend Chart -->
+    <FilterableTimeSeriesChart
+      client:load
+      automations={automations.map(a => ({
+        id: a.id,
+        name: a.name,
+        description: a.description,
+        author: a.author,
+        department: a.department,
+        customer: a.customer,
+        status: a.status,
+        tags: a.tags,
+        time_saved_hours_per_month: a.time_saved_hours_per_month,
+        annual_value_usd: a.annual_value_usd,
+        closed: a.closed
+      }))}
+      title="Automation Impact Trend"
+    />
 
     <!-- Filters -->
     <div class="card p-5 mb-6">

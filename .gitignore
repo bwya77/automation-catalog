@@ -29,6 +29,10 @@ pnpm-debug.log*
 # Astro cache
 .astro/
 
+# Claude
+CLAUDE.md
+.claude/
+
 # TypeScript
 *.tsbuildinfo
 
