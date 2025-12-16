@@ -1,7 +1,7 @@
 {
   "name": "automation-catalog",
   "type": "module",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A central hub for discovering, tracking, and visualizing all automations built by the DevOps Automation team",
   "scripts": {
     "dev": "astro dev",
